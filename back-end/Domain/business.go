@@ -63,3 +63,7 @@ func (b *Business) Validate() error {
 	}
 	return nil
 }
+
+type BusinessRepository interface {
+	FindByID(id string) (*Business, error)
+}
