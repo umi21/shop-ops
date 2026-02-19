@@ -1,36 +1,46 @@
 package routers
 
 import (
+	"shop-ops/Delivery/controllers"
+	infrastructure "shop-ops/Infrastructure"
+
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRouter initializes the Gin engine and defines routes
-func SetupRouter() *gin.Engine {
+func SetupRouter(
+	authController *controllers.AuthController,
+	userController *controllers.UserController,
+	businessController *controllers.BusinessController,
+	jwtService *infrastructure.JWTService,
+) *gin.Engine {
 	r := gin.Default()
 
-	// Health check
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	api := r.Group("/api")
+	// Auth Routes (Public)
+	authGroup := r.Group("/auth")
 	{
-		v1 := api.Group("/v1")
+		authGroup.POST("/register", authController.Register)
+		authGroup.POST("/login", authController.Login)
+		authGroup.POST("/refresh", authController.RefreshToken)
+	}
+
+	// Protected Routes
+	protected := r.Group("/")
+	protected.Use(infrastructure.AuthMiddleware(jwtService))
+	{
+		// User Routes
+		userGroup := protected.Group("/users")
 		{
-			// Health check for v1
-			v1.GET("/health", func(c *gin.Context) {
-				c.JSON(200, gin.H{"status": "ok"})
-			})
+			userGroup.GET("/me", userController.GetProfile)
+			userGroup.PATCH("/me", userController.UpdateProfile)
+		}
 
-			// Auth routes (Example)
-			// auth := v1.Group("/auth")
-			// {
-			// 	auth.POST("/register", controllers.Register)
-			// 	auth.POST("/login", controllers.Login)
-			// }
-
+		// Business Routes
+		businessGroup := protected.Group("/businesses")
+		{
+			businessGroup.POST("", businessController.Create)
+			businessGroup.GET("", businessController.List)
+			businessGroup.GET("/:businessId", businessController.GetById)
+			businessGroup.PATCH("/:businessId", businessController.Update)
 		}
 	}
 
