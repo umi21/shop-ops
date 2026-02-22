@@ -1,0 +1,8 @@
+{
+  "sidebarItems": [
+    { "name": "Home", "href": "/", "icon": "House" },
+    { "name": "Sales", "href": "/sales", "icon": "DollarSign" },
+    { "name": "Products", "href": "/products", "icon": "ShoppingBag" },
+    { "name": "Settings", "href": "/settings", "icon": "Settings" }
+  ]
+}
