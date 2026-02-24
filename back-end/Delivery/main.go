@@ -4,8 +4,11 @@ import (
 	"log"
 	"os"
 
+	"shop-ops/Delivery/controllers"
 	"shop-ops/Delivery/routers"
 	infrastructure "shop-ops/Infrastructure"
+	repositories "shop-ops/Repositories"
+	usecases "shop-ops/Usecases"
 
 	"github.com/joho/godotenv"
 )
@@ -23,8 +26,21 @@ func main() {
 	}
 	defer db.Close()
 
-	// Setup Router
-	r := routers.SetupRouter()
+	// ── Repositories ──────────────────────────────────────────
+	businessRepo := repositories.NewBusinessRepository(db.DB)
+	inventoryRepo := repositories.NewInventoryRepository(db.DB)
+	salesRepo := repositories.NewSalesRepository(db.DB)
+
+	// ── Use Cases ─────────────────────────────────────────────
+	inventoryUC := usecases.NewInventoryUseCase(inventoryRepo, businessRepo)
+	salesUC := usecases.NewSalesUseCase(salesRepo, inventoryRepo, businessRepo)
+
+	// ── Controllers ───────────────────────────────────────────
+	inventoryController := controllers.NewInventoryController(inventoryUC)
+	salesController := controllers.NewSalesController(salesUC)
+
+	// ── Router ────────────────────────────────────────────────
+	r := routers.SetupRouter(inventoryController, salesController)
 
 	// Get port from environment variable
 	port := os.Getenv("PORT")
