@@ -1,11 +1,10 @@
 "use client";
 import Card from "../components/ui/Card";
 import SalesVsExpensesChart from "../components/charts/SalesVsExpensesChart";
+import PageTitle from "../components/ui/PageTitle";
 import React from "react";
 import StockAlertList from "../components/ui/StockAlertList";
 import { DollarSign, TrendingUp, Package, TriangleAlert } from "lucide-react";
-
-
 
 // dummy data for the chart
 const chartData = [
@@ -24,14 +23,10 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col space-y-4">
       {/* Dashboard Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Dashboard
-        </h1>
-        <p className="text-sm text-slate-500">
-          Overview of your business operations
-        </p>
-      </div>
+      <PageTitle
+        title="Dashboard"
+        subtitle="Overview of your business operations"
+      />
 
       {/* Dashboard KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -71,6 +66,7 @@ export default function DashboardPage() {
           icon={Package}
           iconWrapperClass="bg-orange-50 text-orange-600"
           description="Items waiting to upload"
+          trend=""
         />
       </div>
 

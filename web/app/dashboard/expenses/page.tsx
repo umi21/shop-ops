@@ -1,9 +1,19 @@
-import React from 'react'
+import React from "react";
+import PageTitle from "@/app/components/ui/PageTitle";
+import Card from "@/app/components/ui/Card";
+import { DollarSign, TrendingUp, Package, TriangleAlert } from "lucide-react";
 
-const page = () => {
+const Expenses = () => {
   return (
-    <div>page</div>
-  )
-}
+    <div className="flex flex-col">
+      <PageTitle
+        title="Expenses"
+        subtitle="Track and review business expenses"
+      />
 
-export default page
+      
+    </div>
+  );
+};
+
+export default Expenses;
