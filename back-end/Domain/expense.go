@@ -22,6 +22,41 @@ const (
 	ExpenseOther         ExpenseCategory = "OTHER"
 )
 
+// Domain errors for expense module
+var (
+	ErrExpenseNotFound		= errors.New("expense not found")
+	ErrUnauthorized 		= errors.New("unauthorized access to expense")
+	ErrInvalidCategory 		= errors.New("invalid expense category")
+	ErrMissingBusinessID	= errors.New("business ID is required")
+	ErrNegativeAmount 		= errors.New("amount cannot be negative")
+	ErrCannotUpdateSynced 	= errors.New("cannot update synced expense")
+	ErrCannotUpdateVoided 	= errors.New("cannot update voided expense")
+)
+
+// GetAllExpenseCategories returns all valid expense categories
+func GetAllExpenseCategories() []ExpenseCategory {
+	return []ExpenseCategory{
+		ExpenseRent,
+		ExpenseUtilities,
+		ExpenseSalary,
+		ExpenseStockPurchase,
+		ExpenseTransport,
+		ExpenseTransport,
+		ExpenseMarketing,
+		ExpenseMaintenance,
+		ExpenseOther,
+	}
+}
+
+func IsValidExpenseCategory(category string) bool {
+	for _, c := range GetAllExpenseCategories() {
+		if string(c) == category {
+			return true
+		}
+	}
+	return false
+}
+
 // Expense represents a business expense
 type Expense struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
@@ -61,4 +96,10 @@ func (e *Expense) Validate() error {
 		return errors.New("expense category is required")
 	}
 	return nil
+}
+
+
+// Void marks the expense as voided
+func (e *Expense) Void() {
+	e.IsVoided = true
 }
