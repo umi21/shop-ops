@@ -32,7 +32,7 @@ func (e ExpenseFilter) SetCategory(category domain.ExpenseCategory) {
 	panic("unimplemented")
 }
 
-//ExpenseRepository define the expense repository
+//ExpenseRepository 
 
 type ExpenseRepository interface {
 	Create(ctx context.Context, expense *domain.Expense) error
@@ -43,12 +43,12 @@ type ExpenseRepository interface {
 	GetSummaryByCategory(ctx context.Context, businessID primitive.ObjectID, startDate, endDate *time.Time) (map[domain.ExpenseCategory]decimal.Decimal, decimal.Decimal, error)
 }
 
-// MongoExpenseRepository is the MongoDB implementation of ExpenseRepository
+// MongoExpenseRepository 
 type MongoExpenseRepository struct {
 	collection *mongo.Collection
 }
 
-// NewExpenseRepository creates a new MongoDB expense repository
+// NewExpenseRepository 
 func NewExpenseRepository(db *mongo.Database) ExpenseRepository {
 	return &MongoExpenseRepository{
 		collection: db.Collection("expenses"),
@@ -61,7 +61,7 @@ func (r *MongoExpenseRepository) Create(ctx context.Context, expense *domain.Exp
 	return err
 }
 
-// GetByID retrieves an expense by its ID
+// GetByID r
 func (r *MongoExpenseRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*domain.Expense, error) {
 	var expense domain.Expense
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&expense)

@@ -22,7 +22,7 @@ const (
 	ExpenseOther         ExpenseCategory = "OTHER"
 )
 
-// Domain errors for expense module
+// Domain errors  expense module
 var (
 	ErrExpenseNotFound		= errors.New("expense not found")
 	ErrUnauthorized 		= errors.New("unauthorized access to expense")
@@ -33,7 +33,7 @@ var (
 	ErrCannotUpdateVoided 	= errors.New("cannot update voided expense")
 )
 
-// GetAllExpenseCategories returns all valid expense categories
+// GetAllExpenseCategories  expense categories
 func GetAllExpenseCategories() []ExpenseCategory {
 	return []ExpenseCategory{
 		ExpenseRent,
@@ -57,7 +57,7 @@ func IsValidExpenseCategory(category string) bool {
 	return false
 }
 
-// Expense represents a business expense
+// Expense represents  expense
 type Expense struct {
 	ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	BusinessID primitive.ObjectID `bson:"business_id" json:"business_id"`
@@ -71,8 +71,6 @@ type Expense struct {
 // NewExpense creates a new Expense instance
 func NewExpense(businessID primitive.ObjectID, category ExpenseCategory, amount decimal.Decimal, note string) *Expense {
 	now := time.Now()
-	// Default to OTHER if invalid/empty? Or enforce validation?
-	// For now, let's allow caller to set it, validation will catch it if needed.
 	return &Expense{
 		ID:         primitive.NewObjectID(),
 		BusinessID: businessID,

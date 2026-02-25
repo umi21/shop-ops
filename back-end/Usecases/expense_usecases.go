@@ -170,12 +170,11 @@ func (uc *ExpenseUseCases) VoidExpense(expenseId primitive.ObjectID) error {
         return err
     }
     
-    // If already voided, return success (idempotence)
+
     if expense.IsVoided {
         return nil
     }
     
-    // Void via repository
     return uc.expenseRepo.Void(ctx, expenseId)
 }
 
@@ -193,7 +192,7 @@ func (uc *ExpenseUseCases) GetExpensesByCategory(businessId primitive.ObjectID, 
         return nil, err
     }
     
-    // Convert categories to strings for JSON response
+   
     categories := make(map[string]decimal.Decimal)
     for cat, amount := range summary {
         categories[string(cat)] = amount
