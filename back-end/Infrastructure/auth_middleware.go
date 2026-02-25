@@ -1,0 +1,62 @@
+package infrastructure
+
+import (
+	"log"
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+)
+
+func AuthMiddleware(jwtService *JWTService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header format must be Bearer {token}"})
+			return
+		}
+
+		tokenString := parts[1]
+		token, err := jwtService.ValidateToken(tokenString)
+		if err != nil {
+			log.Printf("[AUTH] Token validation error: %v", err)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			return
+		}
+		if token == nil || !token.Valid {
+			log.Println("[AUTH] Token is nil or not valid")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			return
+		}
+
+		userID, ok := claims["user_id"].(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID in token"})
+			return
+		}
+
+		// Enforce token type
+		tokenType, ok := claims["type"].(string)
+		if !ok || tokenType != "access" {
+			log.Printf("[AUTH] Rejected token type: %v", claims["type"])
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token type"})
+			return
+		}
+
+		c.Set("user_id", userID)
+		c.Next()
+	}
+}
