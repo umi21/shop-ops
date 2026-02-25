@@ -2,7 +2,7 @@ import React from "react";
 import Sidebar from "../components/ui/Sidebar";
 import Header from "../components/ui/Header";
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full w-full">
       <Sidebar />
