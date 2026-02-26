@@ -71,7 +71,9 @@ export default function Sidebar() {
   };
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
+    if (href === "/" || href === "/dashboard") {
+      return pathname === href;
+    }
     return pathname.startsWith(href);
   };
 
