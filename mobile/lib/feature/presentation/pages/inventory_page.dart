@@ -6,6 +6,7 @@ import '../manager/bloc/inventory_state.dart';
 import '../widgets/product_card.dart';
 import '../widgets/custom_bottom_nav.dart';
 import 'add_product_page.dart'; 
+import 'product_details_page.dart'; 
 
 class InventoryPage extends StatelessWidget {
   const InventoryPage({Key? key}) : super(key: key);
@@ -81,7 +82,6 @@ class InventoryPage extends StatelessWidget {
                                 final isSelected = category == state.selectedCategory;
                                 return GestureDetector(
                                   onTap: () {
-                                    // We send an event to the BLoC
                                     context.read<InventoryBloc>().add(ChangeCategoryEvent(category));
                                   },
                                   child: Container(
@@ -111,7 +111,19 @@ class InventoryPage extends StatelessWidget {
                               physics: const BouncingScrollPhysics(),
                               itemCount: state.products.length,
                               itemBuilder: (context, index) {
-                                return ProductCard(product: state.products[index]);
+                                final currentProduct = state.products[index]; 
+                                
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ProductDetailsPage(product: currentProduct),
+                                      ),
+                                    );
+                                  },
+                                  child: ProductCard(product: currentProduct),
+                                );
                               },
                             ),
                           ),
@@ -135,11 +147,11 @@ class InventoryPage extends StatelessWidget {
           );
         },
         backgroundColor: const Color(0xFF1E5EFE),
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        elevation: 6, 
+        shape: const CircleBorder(), 
         child: const Icon(Icons.add, size: 30, color: Colors.white),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: const CustomBottomNav(),
     );
   }

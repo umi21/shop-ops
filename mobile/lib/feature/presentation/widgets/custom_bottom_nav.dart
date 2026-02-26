@@ -5,22 +5,33 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      color: Colors.white,
-      elevation: 20,
-      child: SizedBox(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.inventory_2_outlined, 'INVENTORY', true),
-            _buildNavItem(Icons.bar_chart, 'SALES', false),
-            const SizedBox(width: 40), // Space for the central FAB
-            _buildNavItem(Icons.receipt_long, 'EXPENSES', false),
-            _buildNavItem(Icons.settings_outlined, 'MORE', false),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: BottomAppBar(
+        color: Colors.white,
+        elevation: 0,
+        child: SizedBox(
+          height: 65,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.grid_view_rounded, 'Home', false),
+              // L'icône la plus proche de la maquette pour Inventory
+              _buildNavItem(Icons.inventory_rounded, 'Inventory', true),
+              _buildNavItem(Icons.show_chart_rounded, 'Sales', false),
+              _buildNavItem(Icons.receipt_long_rounded, 'Expenses', false),
+              _buildNavItem(Icons.settings_outlined, 'Settings', false),
+            ],
+          ),
         ),
       ),
     );
@@ -32,13 +43,13 @@ class CustomBottomNav extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: color),
+        Icon(icon, color: color, size: 24),
         const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
             fontSize: 10,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: color,
           ),
         ),
