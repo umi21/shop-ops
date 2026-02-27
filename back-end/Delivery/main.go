@@ -1,40 +1,86 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
+	"time"
 
+	"shop-ops/Delivery/controllers"
 	"shop-ops/Delivery/routers"
 	infrastructure "shop-ops/Infrastructure"
+	repositories "shop-ops/Repositories"
+	usecases "shop-ops/Usecases"
 
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using default environment variables")
+		log.Println("No .env file found")
 	}
 
-	// Initialize Database
-	db, err := infrastructure.NewDatabase()
+	mongoURI := os.Getenv("MONGO_URI")
+	if mongoURI == "" {
+		mongoURI = "mongodb://localhost:27017"
+	}
+	dbName := os.Getenv("DB_NAME")
+	if dbName == "" {
+		dbName = "shopops"
+	}
+
+	// Connect to MongoDB
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatal(err)
 	}
-	defer db.Close()
+	defer func() {
+		if err = client.Disconnect(context.Background()); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
-	// Setup Router
-	r := routers.SetupRouter()
+	// Ping database
+	if err = client.Ping(ctx, nil); err != nil {
+		log.Fatal("Could not connect to MongoDB:", err)
+	}
+	log.Println("Connected to MongoDB")
 
-	// Get port from environment variable
+	db := client.Database(dbName)
+
+	// Repositories
+	userRepo := repositories.NewUserRepository(db)
+	businessRepo := repositories.NewBusinessRepository(db)
+
+	// Services
+	pwdService := infrastructure.NewPasswordService()
+	jwtService := infrastructure.NewJWTService()
+
+	// Use Cases
+	userUC := usecases.NewUserUseCases(userRepo, pwdService, jwtService)
+	businessUC := usecases.NewBusinessUseCases(businessRepo)
+
+	// Controllers
+	authController := controllers.NewAuthController(userUC)
+	userController := controllers.NewUserController(userUC)
+	businessController := controllers.NewBusinessController(businessUC)
+
+	// Router
+	r := routers.SetupRouter(authController, userController, businessController, jwtService)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// Run Server
 	log.Printf("Server starting on port %s", port)
 	if err := r.Run(":" + port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		log.Fatal("Failed to start server:", err)
 	}
 }
