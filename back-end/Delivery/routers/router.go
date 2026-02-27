@@ -14,6 +14,7 @@ func SetupRouter(
 	businessController *controllers.BusinessController,
 	jwtService *infrastructure.JWTService,
 	expenseController *controllers.ExpenseController,
+	transactionController *controllers.TransactionController,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -71,6 +72,13 @@ func SetupRouter(
 				expenseGroup.PATCH("/:expenseId", expenseController.UpdateExpense)
 				expenseGroup.DELETE("/:expenseId", expenseController.VoidExpense)
 			}
+
+			// Transaction Routes (Data Explorer - Unified View)
+			transactionGroup := protected.Group("/transactions")
+			{
+				transactionGroup.GET("", transactionController.GetTransactions)
+			}
+
 			log.Println("=== ROUTES SAVED ===")
 			for _, route := range r.Routes() {
 				log.Printf("[ROUTE] %s %s", route.Method, route.Path)
