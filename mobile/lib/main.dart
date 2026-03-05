@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/routes/app_routes.dart';
-import 'feature/presentation/manager/bloc/inventory_bloc.dart';
-import 'feature/presentation/manager/bloc/inventory_event.dart';
+import 'features/inventory/presentation/manager/bloc/inventory_bloc.dart';
+import 'features/inventory/presentation/manager/bloc/inventory_event.dart';
 
 void main() {
   runApp(

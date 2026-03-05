@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../feature/presentation/pages/inventory_page.dart';
-import '../../feature/presentation/pages/add_product_page.dart'; 
+import '../../features/inventory/presentation/pages/inventory_page.dart';
+import '../../features/inventory/presentation/pages/add_product_page.dart'; 
 
 class AppRoutes {
   static const String initialRoute = '/';
