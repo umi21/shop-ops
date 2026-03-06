@@ -4,9 +4,10 @@ import '../manager/bloc/inventory_bloc.dart';
 import '../manager/bloc/inventory_event.dart';
 import '../manager/bloc/inventory_state.dart';
 import '../widgets/product_card.dart';
-import '../widgets/custom_bottom_nav.dart';
+import '../../../../core/widgets/custom_bottom_nav.dart';
 import 'add_product_page.dart'; 
 import 'product_details_page.dart'; 
+import '../../../expense/presentation/pages/expense_page.dart';
 
 class InventoryPage extends StatelessWidget {
   const InventoryPage({Key? key}) : super(key: key);
@@ -152,7 +153,18 @@ class InventoryPage extends StatelessWidget {
         child: const Icon(Icons.add, size: 30, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: const CustomBottomNav(),
+      
+      bottomNavigationBar: CustomBottomNav(
+        selectedIndex: 1, 
+        onItemSelected: (index) {
+          if (index == 3) { 
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ExpensePage()),
+            );
+          }
+        },
+      ),
     );
   }
 }
