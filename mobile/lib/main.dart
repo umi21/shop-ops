@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'core/routes/app_routes.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_bloc.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_event.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(
@@ -25,7 +26,7 @@ class ShopOpsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Shop Ops',
+      title: 'Shop-Ops',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: const Color(0xFF1E5EFE),
