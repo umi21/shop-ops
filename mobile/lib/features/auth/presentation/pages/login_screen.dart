@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/main_screen.dart';
+import '../../../../core/routes/app_routes.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -51,12 +51,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.storefront, color: Colors.white, size: 34),
+                      child: const Icon(
+                        Icons.storefront,
+                        color: Colors.white,
+                        size: 34,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
                       'Shop-Ops',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -69,7 +76,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               // Email
-              Text('Email Address', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+              Text(
+                'Email Address',
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _emailController,
@@ -79,7 +92,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.email_outlined),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey.shade200),
@@ -96,16 +112,28 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Password', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+                  Text(
+                    'Password',
+                    style: TextStyle(
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(builder: (_) => const MainScreen()),
-);
+                      Navigator.pushReplacementNamed(
+                        context,
+                        AppRoutes.mainRoute,
+                      );
                     },
-                    child: const Text('Forgot Password?', style: TextStyle(color: Color(0xFF1765FF))),
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(40, 24)),
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Color(0xFF1765FF)),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(40, 24),
+                    ),
                   ),
                 ],
               ),
@@ -118,11 +146,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     onPressed: () => setState(() => _obscure = !_obscure),
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(
+                      _obscure ? Icons.visibility_off : Icons.visibility,
+                    ),
                   ),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey.shade200),
@@ -141,16 +174,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 54,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushReplacement(
+                    Navigator.pushReplacementNamed(
                       context,
-                      MaterialPageRoute(builder: (_) => const MainScreen()),
+                      AppRoutes.mainRoute,
                     );
                   },
                   icon: const SizedBox(),
                   label: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       SizedBox(width: 8),
                       Icon(Icons.arrow_forward, size: 18),
                     ],
@@ -159,7 +198,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
                     elevation: 12,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -169,12 +210,19 @@ class _LoginScreenState extends State<LoginScreen> {
               // Or continue with
               Row(
                 children: [
-                  Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                  Expanded(
+                    child: Divider(color: Colors.grey.shade300, thickness: 1),
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('OR CONTINUE WITH', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                    child: Text(
+                      'OR CONTINUE WITH',
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
                   ),
-                  Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+                  Expanded(
+                    child: Divider(color: Colors.grey.shade300, thickness: 1),
+                  ),
                 ],
               ),
 
@@ -188,12 +236,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: const Icon(Icons.apple, size: 18),
                       label: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('Apple', style: TextStyle(color: Colors.black87)),
+                        child: Text(
+                          'Apple',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
                         side: BorderSide(color: Colors.grey.shade200),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -204,12 +257,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       icon: const Icon(Icons.g_mobiledata, size: 18),
                       label: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('Google', style: TextStyle(color: Colors.black87)),
+                        child: Text(
+                          'Google',
+                          style: TextStyle(color: Colors.black87),
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
                         side: BorderSide(color: Colors.grey.shade200),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -222,11 +280,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Don't have an account?", style: TextStyle(color: Colors.grey[600])),
+                    Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
                     TextButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen())),
-                      child: const Text('Sign up now', style: TextStyle(color: Color(0xFF1765FF), fontWeight: FontWeight.w600)),
-                      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SignupScreen()),
+                      ),
+                      child: const Text(
+                        'Sign up now',
+                        style: TextStyle(
+                          color: Color(0xFF1765FF),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
                     ),
                   ],
                 ),

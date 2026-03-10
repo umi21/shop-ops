@@ -32,5 +32,11 @@ class AddProductState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [stock, costPrice, sellingPrice, marginAmount, marginPercentage];
+  List<Object?> get props => [
+    stock,
+    costPrice,
+    sellingPrice,
+    marginAmount,
+    marginPercentage,
+  ];
 }

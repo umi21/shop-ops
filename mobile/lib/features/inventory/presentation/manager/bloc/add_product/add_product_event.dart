@@ -16,7 +16,7 @@ class UpdateStockEvent extends AddProductEvent {
 class UpdatePricesEvent extends AddProductEvent {
   final double costPrice;
   final double sellingPrice;
-  
+
   UpdatePricesEvent({required this.costPrice, required this.sellingPrice});
 
   @override

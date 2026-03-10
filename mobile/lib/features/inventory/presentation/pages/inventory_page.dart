@@ -4,10 +4,8 @@ import '../manager/bloc/inventory_bloc.dart';
 import '../manager/bloc/inventory_event.dart';
 import '../manager/bloc/inventory_state.dart';
 import '../widgets/product_card.dart';
-import '../../../../core/widgets/custom_bottom_nav.dart';
-import 'add_product_page.dart'; 
-import 'product_details_page.dart'; 
-import '../../../expense/presentation/pages/expense_page.dart';
+import 'add_product_page.dart';
+import 'product_details_page.dart';
 
 class InventoryPage extends StatelessWidget {
   const InventoryPage({Key? key}) : super(key: key);
@@ -52,22 +50,25 @@ class InventoryPage extends StatelessWidget {
                   decoration: InputDecoration(
                     hintText: 'Search products, SKUs...',
                     hintStyle: const TextStyle(color: Color(0xFF6B7280)),
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF94A3B8),
+                    ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Use of BloC here
               Expanded(
                 child: BlocBuilder<InventoryBloc, InventoryState>(
                   builder: (context, state) {
                     if (state is InventoryLoadingState) {
                       return const Center(child: CircularProgressIndicator());
-                    } 
-                    
+                    }
+
                     if (state is InventoryLoadedState) {
                       return Column(
                         children: [
@@ -77,26 +78,36 @@ class InventoryPage extends StatelessWidget {
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: state.categories.length,
-                              separatorBuilder: (context, index) => const SizedBox(width: 8),
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(width: 8),
                               itemBuilder: (context, index) {
                                 final category = state.categories[index];
-                                final isSelected = category == state.selectedCategory;
+                                final isSelected =
+                                    category == state.selectedCategory;
                                 return GestureDetector(
                                   onTap: () {
-                                    context.read<InventoryBloc>().add(ChangeCategoryEvent(category));
+                                    context.read<InventoryBloc>().add(
+                                      ChangeCategoryEvent(category),
+                                    );
                                   },
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                      color: isSelected ? const Color(0xFF1E5EFE) : const Color(0xFFF1F5F9),
+                                      color: isSelected
+                                          ? const Color(0xFF1E5EFE)
+                                          : const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
                                       category,
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
-                                        color: isSelected ? Colors.white : const Color(0xFF475569),
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF475569),
                                       ),
                                     ),
                                   ),
@@ -105,21 +116,24 @@ class InventoryPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // List of products (vertical)
                           Expanded(
                             child: ListView.builder(
                               physics: const BouncingScrollPhysics(),
                               itemCount: state.products.length,
                               itemBuilder: (context, index) {
-                                final currentProduct = state.products[index]; 
-                                
+                                final currentProduct = state.products[index];
+
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ProductDetailsPage(product: currentProduct),
+                                        builder: (context) =>
+                                            ProductDetailsPage(
+                                              product: currentProduct,
+                                            ),
                                       ),
                                     );
                                   },
@@ -148,23 +162,11 @@ class InventoryPage extends StatelessWidget {
           );
         },
         backgroundColor: const Color(0xFF1E5EFE),
-        elevation: 6, 
-        shape: const CircleBorder(), 
+        elevation: 6,
+        shape: const CircleBorder(),
         child: const Icon(Icons.add, size: 30, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      
-      bottomNavigationBar: CustomBottomNav(
-        selectedIndex: 1, 
-        onItemSelected: (index) {
-          if (index == 3) { 
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const ExpensePage()),
-            );
-          }
-        },
-      ),
     );
   }
 }

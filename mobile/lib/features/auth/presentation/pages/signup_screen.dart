@@ -46,16 +46,27 @@ class _SignupScreenState extends State<SignupScreen> {
                         color: primary.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(Icons.query_stats, color: Color(0xFF1765FF), size: 34),
+                      child: const Icon(
+                        Icons.query_stats,
+                        color: Color(0xFF1765FF),
+                        size: 34,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Text(
                       'Grow your',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const Text(
                       'business',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1765FF)),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1765FF),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -69,7 +80,13 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
 
               // Full Name
-              Text('Full Name', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+              Text(
+                'Full Name',
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
@@ -78,14 +95,26 @@ class _SignupScreenState extends State<SignupScreen> {
                   prefixIcon: const Icon(Icons.person_outline),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade100)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade100),
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
 
               // Email Address
-              Text('Email Address', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+              Text(
+                'Email Address',
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _emailController,
@@ -95,14 +124,26 @@ class _SignupScreenState extends State<SignupScreen> {
                   prefixIcon: const Icon(Icons.email_outlined),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade100)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade100),
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
 
               // Business Name
-              Text('Business Name', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+              Text(
+                'Business Name',
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _businessController,
@@ -111,8 +152,14 @@ class _SignupScreenState extends State<SignupScreen> {
                   prefixIcon: const Icon(Icons.storefront_outlined),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade100)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade100),
+                  ),
                 ),
               ),
 
@@ -121,14 +168,27 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: const [
                   Icon(Icons.check_circle, color: Colors.green, size: 14),
                   SizedBox(width: 8),
-                  Text('BUSINESS IDENTITY VERIFIED', style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text(
+                    'BUSINESS IDENTITY VERIFIED',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
 
               const SizedBox(height: 16),
 
               // Password
-              Text('Password', style: TextStyle(color: Colors.grey[800], fontWeight: FontWeight.w600)),
+              Text(
+                'Password',
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _passwordController,
@@ -138,12 +198,20 @@ class _SignupScreenState extends State<SignupScreen> {
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     onPressed: () => setState(() => _obscure = !_obscure),
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(
+                      _obscure ? Icons.visibility_off : Icons.visibility,
+                    ),
                   ),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade100)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade100),
+                  ),
                 ),
               ),
 
@@ -158,7 +226,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   label: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Create Account',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       SizedBox(width: 8),
                       Icon(Icons.arrow_forward, size: 18),
                     ],
@@ -167,7 +241,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
                     elevation: 12,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -189,10 +265,19 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account?', style: TextStyle(color: Colors.grey[600])),
+                    Text(
+                      'Already have an account?',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Log In', style: TextStyle(color: Color(0xFF1765FF), fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Log In',
+                        style: TextStyle(
+                          color: Color(0xFF1765FF),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -200,7 +285,11 @@ class _SignupScreenState extends State<SignupScreen> {
 
               const SizedBox(height: 8),
               Center(
-                child: Text('By clicking Create Account, you agree to our Terms of Service and Privacy Policy.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                child: Text(
+                  'By clicking Create Account, you agree to our Terms of Service and Privacy Policy.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                ),
               ),
             ],
           ),

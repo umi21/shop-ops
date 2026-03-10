@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/sales.dart';
+import '../../../models/sales.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -78,10 +78,22 @@ class _SalesScreenState extends State<SalesScreen> {
 
   List<SaleGroup> get _filteredGroups {
     if (_searchQuery.isEmpty) return _allGroups;
-    return _allGroups.map((g) {
-      final filteredSales = g.sales.where((s) => s.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
-      return SaleGroup(label: g.label, total: g.total, sales: filteredSales);
-    }).where((g) => g.sales.isNotEmpty).toList();
+    return _allGroups
+        .map((g) {
+          final filteredSales = g.sales
+              .where(
+                (s) =>
+                    s.title.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
+          return SaleGroup(
+            label: g.label,
+            total: g.total,
+            sales: filteredSales,
+          );
+        })
+        .where((g) => g.sales.isNotEmpty)
+        .toList();
   }
 
   @override
@@ -102,7 +114,10 @@ class _SalesScreenState extends State<SalesScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Sales History', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  const Text(
+                    'Sales History',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
                   _AddButton(
                     onTap: () => showModalBottomSheet(
                       context: context,
@@ -126,7 +141,10 @@ class _SalesScreenState extends State<SalesScreen> {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _TabRow(selected: _selectedTab, onTap: (i) => setState(() => _selectedTab = i)),
+              child: _TabRow(
+                selected: _selectedTab,
+                onTap: (i) => setState(() => _selectedTab = i),
+              ),
             ),
 
             const SizedBox(height: 14),
@@ -139,7 +157,11 @@ class _SalesScreenState extends State<SalesScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search product or ID...',
                   hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                  prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey[400],
+                    size: 20,
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -199,7 +221,11 @@ class _SummaryCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: primary.withOpacity(0.35), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: primary.withOpacity(0.35),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: Stack(
@@ -207,14 +233,32 @@ class _SummaryCard extends StatelessWidget {
           Positioned(
             right: -10,
             bottom: -10,
-            child: Icon(Icons.trending_up, size: 100, color: Colors.white.withOpacity(0.08)),
+            child: Icon(
+              Icons.trending_up,
+              size: 100,
+              color: Colors.white.withOpacity(0.08),
+            ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Total Revenue', style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
+              Text(
+                'Total Revenue',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.85),
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 6),
-              const Text(r'$69,420.67', style: TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+              const Text(
+                r'$69,420.67',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -242,9 +286,23 @@ class _StatChip extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 10, letterSpacing: 0.5)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.65),
+            fontSize: 10,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ],
     );
   }
@@ -309,10 +367,22 @@ class _GroupHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey, letterSpacing: 0.4)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey,
+            letterSpacing: 0.4,
+          ),
+        ),
         Text(
           '\$${total.toStringAsFixed(2)} Total',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1765FF)),
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1765FF),
+          ),
         ),
       ],
     );
@@ -331,7 +401,11 @@ class _GroupCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Column(
@@ -341,7 +415,12 @@ class _GroupCard extends StatelessWidget {
             children: [
               _SaleTile(sale: sale),
               if (i < sales.length - 1)
-                Divider(height: 1, indent: 68, endIndent: 16, color: Colors.grey.shade100),
+                Divider(
+                  height: 1,
+                  indent: 68,
+                  endIndent: 16,
+                  color: Colors.grey.shade100,
+                ),
             ],
           );
         }),
@@ -367,14 +446,27 @@ class _SaleTile extends StatelessWidget {
       leading: Container(
         width: 44,
         height: 44,
-        decoration: BoxDecoration(color: sale.iconBg, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          color: sale.iconBg,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Icon(sale.icon, color: sale.iconColor, size: 22),
       ),
-      title: Text(sale.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-      subtitle: Text(sale.subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+      title: Text(
+        sale.title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        sale.subtitle,
+        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+      ),
       trailing: Text(
         amountText,
-        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: amountColor),
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: amountColor,
+        ),
       ),
     );
   }
@@ -389,7 +481,8 @@ class _AddButton extends StatefulWidget {
   State<_AddButton> createState() => _AddButtonState();
 }
 
-class _AddButtonState extends State<_AddButton> with SingleTickerProviderStateMixin {
+class _AddButtonState extends State<_AddButton>
+    with SingleTickerProviderStateMixin {
   static const primary = Color(0xFF1765FF);
   late final AnimationController _controller;
   late final Animation<double> _scale;
@@ -397,10 +490,14 @@ class _AddButtonState extends State<_AddButton> with SingleTickerProviderStateMi
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
-    _scale = Tween<double>(begin: 1.0, end: 0.88).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
     );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 0.88,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -426,7 +523,13 @@ class _AddButtonState extends State<_AddButton> with SingleTickerProviderStateMi
           decoration: BoxDecoration(
             color: primary,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: primary.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))],
+            boxShadow: [
+              BoxShadow(
+                color: primary.withOpacity(0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: const Icon(Icons.add, color: Colors.white, size: 22),
         ),
@@ -464,7 +567,9 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
   void _keyTap(String key) {
     setState(() {
       if (key == '⌫') {
-        _quantity = _quantity.length > 1 ? _quantity.substring(0, _quantity.length - 1) : '0';
+        _quantity = _quantity.length > 1
+            ? _quantity.substring(0, _quantity.length - 1)
+            : '0';
       } else if (key == '.') {
         if (!_quantity.contains('.')) _quantity += '.';
       } else {
@@ -491,8 +596,12 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
           children: [
             const SizedBox(height: 10),
             Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -501,13 +610,24 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Quick Add Sale', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  const Text(
+                    'Quick Add Sale',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      width: 32, height: 32,
-                      decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-                      child: const Icon(Icons.close, size: 18, color: Colors.black54),
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 18,
+                        color: Colors.black54,
+                      ),
                     ),
                   ),
                 ],
@@ -521,17 +641,35 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('PRODUCT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey, letterSpacing: 0.8)),
+                  const Text(
+                    'PRODUCT',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _productSearchController,
                     decoration: InputDecoration(
                       hintText: 'Search product or SKU...',
-                      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                      prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20),
+                      hintStyle: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 14,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.grey[400],
+                        size: 20,
+                      ),
                       filled: true,
                       fillColor: Colors.grey.shade50,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 16,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey.shade200),
@@ -542,7 +680,10 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: primary, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: primary,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -568,7 +709,15 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('QUANTITY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey, letterSpacing: 0.8)),
+                        const Text(
+                          'QUANTITY',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Container(
                           height: 64,
@@ -577,7 +726,13 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: green, width: 2),
                           ),
-                          child: Text(_quantity, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
+                          child: Text(
+                            _quantity,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -587,7 +742,15 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('UNIT PRICE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey, letterSpacing: 0.8)),
+                        const Text(
+                          'UNIT PRICE',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Container(
                           height: 64,
@@ -597,7 +760,13 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Text('\$${_unitPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                          child: Text(
+                            '\$${_unitPrice.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -611,7 +780,10 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0FBF0),
                   borderRadius: BorderRadius.circular(14),
@@ -623,9 +795,23 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('TOTAL AMOUNT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.grey, letterSpacing: 0.5)),
+                        const Text(
+                          'TOTAL AMOUNT',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        Text('\$${_total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                        Text(
+                          '\$${_total.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ],
                     ),
                     Column(
@@ -633,9 +819,11 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                       children: [
                         Switch(
                           value: _paymentReceived,
-                          onChanged: (v) => setState(() => _paymentReceived = v),
+                          onChanged: (v) =>
+                              setState(() => _paymentReceived = v),
                           activeColor: green,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                         Text(
                           'PAYMENT RECEIVED',
@@ -682,14 +870,28 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: _addPressed
                           ? []
-                          : [BoxShadow(color: green.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4))],
+                          : [
+                              BoxShadow(
+                                color: green.withOpacity(0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.check_circle, color: Colors.white, size: 22),
                         SizedBox(width: 10),
-                        Text('ADD SALE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1, color: Colors.white)),
+                        Text(
+                          'ADD SALE',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -747,14 +949,28 @@ class _NumpadState extends State<_Numpad> {
                       height: 52,
                       decoration: BoxDecoration(
                         color: isBackspace
-                            ? (isPressed ? Colors.grey.shade600 : Colors.grey.shade800)
-                            : (isPressed ? Colors.grey.shade300 : Colors.grey.shade100),
+                            ? (isPressed
+                                  ? Colors.grey.shade600
+                                  : Colors.grey.shade800)
+                            : (isPressed
+                                  ? Colors.grey.shade300
+                                  : Colors.grey.shade100),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       alignment: Alignment.center,
                       child: isBackspace
-                          ? const Icon(Icons.backspace_outlined, color: Colors.white, size: 20)
-                          : Text(key, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+                          ? const Icon(
+                              Icons.backspace_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            )
+                          : Text(
+                              key,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -774,14 +990,21 @@ class _Chip extends StatelessWidget {
   const _Chip({required this.label, required this.color});
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 }

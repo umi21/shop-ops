@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dotted_border/dotted_border.dart'; 
+import 'package:dotted_border/dotted_border.dart';
 import '../manager/bloc/add_product/add_product_bloc.dart';
 import '../manager/bloc/add_product/add_product_event.dart';
 import '../manager/bloc/add_product/add_product_state.dart';
@@ -14,8 +14,14 @@ class AddProductPage extends StatefulWidget {
 
 class _AddProductPageState extends State<AddProductPage> {
   String? _selectedCategory;
-  
-  final List<String> _categories = ['Beverages', 'Dairy', 'Bakery', 'Fruit', 'Meat'];
+
+  final List<String> _categories = [
+    'Beverages',
+    'Dairy',
+    'Bakery',
+    'Fruit',
+    'Meat',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -53,22 +59,26 @@ class _AddProductPageState extends State<AddProductPage> {
                 children: [
                   Center(
                     child: DottedBorder(
-                      color: const Color(0xFF135BEC), 
-                      strokeWidth: 2, 
-                      dashPattern: const [6, 4], 
+                      color: const Color(0xFF135BEC),
+                      strokeWidth: 2,
+                      dashPattern: const [6, 4],
                       borderType: BorderType.RRect,
                       radius: const Radius.circular(16),
                       child: Container(
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9), 
+                          color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
-                            Icon(Icons.add_a_photo_outlined, color: Color(0xFF1E5EFE), size: 32),
+                            Icon(
+                              Icons.add_a_photo_outlined,
+                              color: Color(0xFF1E5EFE),
+                              size: 32,
+                            ),
                             SizedBox(height: 8),
                             Text(
                               'ADD PHOTO',
@@ -102,12 +112,21 @@ class _AddProductPageState extends State<AddProductPage> {
                       child: DropdownButton<String>(
                         isExpanded: true,
                         value: _selectedCategory,
-                        hint: const Text('Select Category', style: TextStyle(color: Color(0xFF0F172A))),
-                        icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF64748B)),
+                        hint: const Text(
+                          'Select Category',
+                          style: TextStyle(color: Color(0xFF0F172A)),
+                        ),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Color(0xFF64748B),
+                        ),
                         items: _categories.map((String category) {
                           return DropdownMenuItem<String>(
                             value: category,
-                            child: Text(category, style: const TextStyle(color: Color(0xFF1E293B))),
+                            child: Text(
+                              category,
+                              style: const TextStyle(color: Color(0xFF1E293B)),
+                            ),
                           );
                         }).toList(),
                         onChanged: (String? newValue) {
@@ -124,11 +143,14 @@ class _AddProductPageState extends State<AddProductPage> {
                   const SizedBox(height: 16),
                   _buildLabel('Initial Stock Level'),
                   const SizedBox(height: 8),
-                  
+
                   BlocBuilder<AddProductBloc, AddProductState>(
                     builder: (context, state) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
@@ -137,16 +159,30 @@ class _AddProductPageState extends State<AddProductPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Color(0xFF1E5EFE)),
-                              onPressed: () => context.read<AddProductBloc>().add(UpdateStockEvent(state.stock - 1)),
+                              icon: const Icon(
+                                Icons.remove_circle_outline,
+                                color: Color(0xFF1E5EFE),
+                              ),
+                              onPressed: () => context
+                                  .read<AddProductBloc>()
+                                  .add(UpdateStockEvent(state.stock - 1)),
                             ),
                             Text(
                               '${state.stock}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.add_circle_outline, color: Color(0xFF1E5EFE)),
-                              onPressed: () => context.read<AddProductBloc>().add(UpdateStockEvent(state.stock + 1)),
+                              icon: const Icon(
+                                Icons.add_circle_outline,
+                                color: Color(0xFF1E5EFE),
+                              ),
+                              onPressed: () => context
+                                  .read<AddProductBloc>()
+                                  .add(UpdateStockEvent(state.stock + 1)),
                             ),
                           ],
                         ),
@@ -165,7 +201,11 @@ class _AddProductPageState extends State<AddProductPage> {
                           children: [
                             _buildLabel('Cost Price'),
                             const SizedBox(height: 8),
-                            _buildPriceField(context, hint: '0.00', isCost: true),
+                            _buildPriceField(
+                              context,
+                              hint: '0.00',
+                              isCost: true,
+                            ),
                           ],
                         ),
                       ),
@@ -176,7 +216,11 @@ class _AddProductPageState extends State<AddProductPage> {
                           children: [
                             _buildLabel('Selling Price'),
                             const SizedBox(height: 8),
-                            _buildPriceField(context, hint: '0.00', isCost: false),
+                            _buildPriceField(
+                              context,
+                              hint: '0.00',
+                              isCost: false,
+                            ),
                           ],
                         ),
                       ),
@@ -201,7 +245,11 @@ class _AddProductPageState extends State<AddProductPage> {
                                 color: Color(0xFFE0E7FF),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.trending_up, color: Color(0xFF1E5EFE), size: 20),
+                              child: const Icon(
+                                Icons.trending_up,
+                                color: Color(0xFF1E5EFE),
+                                size: 20,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -210,33 +258,47 @@ class _AddProductPageState extends State<AddProductPage> {
                                 children: [
                                   const Text(
                                     'ESTIMATED MARGIN',
-                                    style: TextStyle(color: Color(0xFF1E5EFE), fontSize: 10, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      color: Color(0xFF1E5EFE),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
                                       Text(
                                         '\$${state.marginAmount.toStringAsFixed(2)}',
-                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1E293B),
+                                        ),
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
                                         '(${state.marginPercentage.toStringAsFixed(0)}%)',
-                                        style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                                        style: const TextStyle(
+                                          color: Color(0xFF94A3B8),
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.info_outline, color: Color(0xFF94A3B8)),
+                            const Icon(
+                              Icons.info_outline,
+                              color: Color(0xFF94A3B8),
+                            ),
                           ],
                         ),
                       );
                     },
                   ),
                   const SizedBox(height: 40),
-                  
+
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -254,7 +316,11 @@ class _AddProductPageState extends State<AddProductPage> {
                       icon: const Icon(Icons.check_circle, color: Colors.white),
                       label: const Text(
                         'Save Product',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1E5EFE),
@@ -270,7 +336,7 @@ class _AddProductPageState extends State<AddProductPage> {
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -278,14 +344,23 @@ class _AddProductPageState extends State<AddProductPage> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(color: Color(0xFF64748B), fontSize: 14, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        color: Color(0xFF64748B),
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 
   Widget _buildSectionTitle(String text) {
     return Text(
       text,
-      style: const TextStyle(color: Color(0xFF1E5EFE), fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+      style: const TextStyle(
+        color: Color(0xFF1E5EFE),
+        fontSize: 11,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
@@ -300,13 +375,20 @@ class _AddProductPageState extends State<AddProductPage> {
           hintText: hint,
           hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPriceField(BuildContext context, {required String hint, required bool isCost}) {
+  Widget _buildPriceField(
+    BuildContext context, {
+    required String hint,
+    required bool isCost,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
@@ -318,11 +400,13 @@ class _AddProductPageState extends State<AddProductPage> {
           final bloc = context.read<AddProductBloc>();
           final currentState = bloc.state;
           final double parsedValue = double.tryParse(value) ?? 0.0;
-          
-          bloc.add(UpdatePricesEvent(
-            costPrice: isCost ? parsedValue : currentState.costPrice,
-            sellingPrice: !isCost ? parsedValue : currentState.sellingPrice,
-          ));
+
+          bloc.add(
+            UpdatePricesEvent(
+              costPrice: isCost ? parsedValue : currentState.costPrice,
+              sellingPrice: !isCost ? parsedValue : currentState.sellingPrice,
+            ),
+          );
         },
         decoration: InputDecoration(
           prefixText: '\$ ',
@@ -330,7 +414,10 @@ class _AddProductPageState extends State<AddProductPage> {
           hintText: hint,
           hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );

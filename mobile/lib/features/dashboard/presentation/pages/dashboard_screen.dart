@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart'; 
+import 'package:fl_chart/fl_chart.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -53,17 +53,26 @@ class DashboardScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'Total Sales',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
                           '↑12%',
-                          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -119,7 +128,11 @@ class DashboardScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -130,7 +143,10 @@ class DashboardScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'Sales Trends',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       Text(
                         'LAST 7 DAYS',
@@ -159,14 +175,28 @@ class DashboardScreen extends StatelessWidget {
                             sideTitles: SideTitles(
                               showTitles: true,
                               getTitlesWidget: (value, meta) => Text(
-                                ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][value.toInt()],
+                                [
+                                  'MON',
+                                  'TUE',
+                                  'WED',
+                                  'THU',
+                                  'FRI',
+                                  'SAT',
+                                  'SUN',
+                                ][value.toInt()],
                                 style: const TextStyle(fontSize: 10),
                               ),
                             ),
                           ),
-                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          leftTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
                         ),
                         gridData: const FlGridData(show: false),
                         borderData: FlBorderData(show: false),
@@ -186,7 +216,11 @@ class DashboardScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -197,11 +231,17 @@ class DashboardScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'Recent Activity',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       TextButton(
                         onPressed: () {},
-                        child: const Text('See All', style: TextStyle(color: Color(0xFF1765FF))),
+                        child: const Text(
+                          'See All',
+                          style: TextStyle(color: Color(0xFF1765FF)),
+                        ),
                       ),
                     ],
                   ),
@@ -279,7 +319,11 @@ class _MetricCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -287,7 +331,10 @@ class _MetricCard extends StatelessWidget {
         children: [
           Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
           Text(subtitle, style: TextStyle(fontSize: 12, color: color)),
         ],
@@ -325,15 +372,18 @@ class _ActivityTile extends StatelessWidget {
         child: Icon(icon, color: color),
       ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(time, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+      subtitle: Text(
+        time,
+        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+      ),
       trailing: Text(
         amount,
         style: TextStyle(
           color: isPositive == true
               ? Colors.green
               : isPositive == false
-                  ? Colors.red
-                  : Colors.blue,
+              ? Colors.red
+              : Colors.blue,
           fontWeight: FontWeight.w600,
         ),
       ),

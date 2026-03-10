@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/widgets/custom_bottom_nav.dart';
 import '../manager/bloc/expense_bloc.dart';
 import '../manager/bloc/expense_event.dart';
 import '../manager/bloc/expense_state.dart';
 import '../widgets/expense_card.dart';
-import '../../../inventory/presentation/pages/inventory_page.dart';
 import '../widgets/quick_add_expense_modal.dart';
 
 class ExpensePage extends StatelessWidget {
@@ -18,7 +16,7 @@ class ExpensePage extends StatelessWidget {
       child: Builder(
         builder: (context) {
           return Scaffold(
-            backgroundColor: const Color(0xFFF8FAFC), 
+            backgroundColor: const Color(0xFFF8FAFC),
             body: SafeArea(
               child: Column(
                 children: [
@@ -43,13 +41,19 @@ class ExpensePage extends StatelessWidget {
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.search, color: Color(0xFF1E5EFE)),
+                              child: const Icon(
+                                Icons.search,
+                                color: Color(0xFF1E5EFE),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             const CircleAvatar(
                               radius: 20,
                               backgroundColor: Color(0xFFE2E8F0),
-                              child: Icon(Icons.person, color: Color(0xFF475569)),
+                              child: Icon(
+                                Icons.person,
+                                color: Color(0xFF475569),
+                              ),
                             ),
                           ],
                         ),
@@ -61,13 +65,17 @@ class ExpensePage extends StatelessWidget {
                     child: BlocBuilder<ExpenseBloc, ExpenseState>(
                       builder: (context, state) {
                         if (state is ExpenseLoadingState) {
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
 
                         if (state is ExpenseLoadedState) {
                           return ListView(
                             physics: const BouncingScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                            ),
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(4),
@@ -77,9 +85,21 @@ class ExpensePage extends StatelessWidget {
                                 ),
                                 child: Row(
                                   children: [
-                                    _buildTab(context, 'Daily', state.selectedTab),
-                                    _buildTab(context, 'Weekly', state.selectedTab),
-                                    _buildTab(context, 'Monthly', state.selectedTab),
+                                    _buildTab(
+                                      context,
+                                      'Daily',
+                                      state.selectedTab,
+                                    ),
+                                    _buildTab(
+                                      context,
+                                      'Weekly',
+                                      state.selectedTab,
+                                    ),
+                                    _buildTab(
+                                      context,
+                                      'Monthly',
+                                      state.selectedTab,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -92,7 +112,9 @@ class ExpensePage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(24),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFF1E5EFE).withOpacity(0.3),
+                                      color: const Color(
+                                        0xFF1E5EFE,
+                                      ).withOpacity(0.3),
                                       blurRadius: 20,
                                       offset: const Offset(0, 10),
                                     ),
@@ -103,7 +125,10 @@ class ExpensePage extends StatelessWidget {
                                   children: [
                                     const Text(
                                       'Total spent today',
-                                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
@@ -116,7 +141,10 @@ class ExpensePage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 16),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(20),
@@ -124,11 +152,19 @@ class ExpensePage extends StatelessWidget {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: const [
-                                          Icon(Icons.trending_up, color: Colors.white, size: 14),
+                                          Icon(
+                                            Icons.trending_up,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
                                           SizedBox(width: 4),
                                           Text(
                                             '12% vs yesterday',
-                                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -139,7 +175,8 @@ class ExpensePage extends StatelessWidget {
                               const SizedBox(height: 32),
 
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
                                     'Recent Costs',
@@ -163,7 +200,11 @@ class ExpensePage extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
 
-                              ...state.expenses.map((expense) => ExpenseCard(expense: expense)).toList(),
+                              ...state.expenses
+                                  .map(
+                                    (expense) => ExpenseCard(expense: expense),
+                                  )
+                                  .toList(),
 
                               const SizedBox(height: 20),
 
@@ -173,12 +214,15 @@ class ExpensePage extends StatelessWidget {
                                   SizedBox(height: 8),
                                   Text(
                                     'No older entries for today',
-                                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                                    style: TextStyle(
+                                      color: Color(0xFF94A3B8),
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
-                              
-                              const SizedBox(height: 100), 
+
+                              const SizedBox(height: 100),
                             ],
                           );
                         }
@@ -197,10 +241,10 @@ class ExpensePage extends StatelessWidget {
                 height: 56,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    final bloc = context.read<ExpenseBloc>(); 
+                    final bloc = context.read<ExpenseBloc>();
                     showModalBottomSheet(
                       context: context,
-                      isScrollControlled: true, 
+                      isScrollControlled: true,
                       backgroundColor: Colors.transparent,
                       builder: (bottomSheetContext) {
                         return BlocProvider.value(
@@ -213,32 +257,27 @@ class ExpensePage extends StatelessWidget {
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: const Text(
                     'Add Expense',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1E5EFE),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                     elevation: 6,
                     shadowColor: const Color(0xFF1E5EFE).withOpacity(0.5),
                   ),
                 ),
               ),
             ),
-            floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-            
-            bottomNavigationBar: CustomBottomNav(
-              selectedIndex: 3, 
-              onItemSelected: (index) {
-                if (index == 1) { 
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const InventoryPage()),
-                  );
-                }
-              },
-            ),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
           );
-        }
+        },
       ),
     );
   }
@@ -247,14 +286,21 @@ class ExpensePage extends StatelessWidget {
     final isSelected = title == selectedTab;
     return Expanded(
       child: GestureDetector(
-        onTap: () => context.read<ExpenseBloc>().add(ChangeExpenseTabEvent(title)),
+        onTap: () =>
+            context.read<ExpenseBloc>().add(ChangeExpenseTabEvent(title)),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: isSelected
-                ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
                 : [],
           ),
           alignment: Alignment.center,
@@ -262,7 +308,9 @@ class ExpensePage extends StatelessWidget {
             title,
             style: TextStyle(
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-              color: isSelected ? const Color(0xFF1E5EFE) : const Color(0xFF64748B),
+              color: isSelected
+                  ? const Color(0xFF1E5EFE)
+                  : const Color(0xFF64748B),
             ),
           ),
         ),

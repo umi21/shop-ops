@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../features/dashboard/presentation/pages/dashboard_screen.dart';
+import '../../features/sales/presentation/sales_screen.dart';
+import '../../features/inventory/presentation/pages/inventory_page.dart';
+import '../../features/expense/presentation/pages/expense_page.dart';
+
 class CustomBottomNav extends StatelessWidget {
   final int selectedIndex;
-  final Function(int)? onItemSelected; 
+  final Function(int)? onItemSelected;
 
-  const CustomBottomNav({
-    Key? key, 
-    this.selectedIndex = 1,
-    this.onItemSelected, 
-  }) : super(key: key);
+  const CustomBottomNav({Key? key, this.selectedIndex = 1, this.onItemSelected})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +18,11 @@ class CustomBottomNav extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5)),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
         ],
       ),
       child: BottomAppBar(
@@ -27,11 +33,11 @@ class CustomBottomNav extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, Icons.grid_view_rounded, 'Home'),
-              _buildNavItem(1, Icons.inventory_rounded, 'Inventory'),
-              _buildNavItem(2, Icons.show_chart_rounded, 'Sales'), 
-              _buildNavItem(3, Icons.receipt_long_rounded, 'Expenses'),
-              _buildNavItem(4, Icons.settings_outlined, 'Settings'),
+              _buildNavItem(context, 0, Icons.grid_view_rounded, 'Home'),
+              _buildNavItem(context, 1, Icons.inventory_rounded, 'Inventory'),
+              _buildNavItem(context, 2, Icons.show_chart_rounded, 'Sales'),
+              _buildNavItem(context, 3, Icons.receipt_long_rounded, 'Expenses'),
+              _buildNavItem(context, 4, Icons.settings_outlined, 'Settings'),
             ],
           ),
         ),
@@ -39,19 +45,30 @@ class CustomBottomNav extends StatelessWidget {
     );
   }
 
-  // NOUVEAU : La fonction prend maintenant l'index de l'élément
-  Widget _buildNavItem(int index, IconData icon, String label) {
+  Widget _buildNavItem(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
     final isSelected = index == selectedIndex;
-    final color = isSelected ? const Color(0xFF1E5EFE) : const Color(0xFF94A3B8);
-    
-    // NOUVEAU : On rend l'élément cliquable
+    final color = isSelected
+        ? const Color(0xFF1E5EFE)
+        : const Color(0xFF94A3B8);
+
     return GestureDetector(
       onTap: () {
-        if (onItemSelected != null && !isSelected) {
-          onItemSelected!(index);
+        if (!isSelected) {
+          // If callback provided, only notify (let parent handle navigation)
+          // Otherwise, handle navigation internally
+          if (onItemSelected != null) {
+            onItemSelected!(index);
+          } else {
+            _navigateTo(context, index);
+          }
         }
       },
-      behavior: HitTestBehavior.opaque, // Rend toute la zone cliquable
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -68,6 +85,53 @@ class CustomBottomNav extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _navigateTo(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+        break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const InventoryPage()),
+        );
+        break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SalesScreen()),
+        );
+        break;
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ExpensePage()),
+        );
+        break;
+      case 4:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const _SettingsScreen()),
+        );
+        break;
+    }
+  }
+}
+
+class _SettingsScreen extends StatelessWidget {
+  const _SettingsScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: const Center(child: Text('Settings coming soon')),
     );
   }
 }

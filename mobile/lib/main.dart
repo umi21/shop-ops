@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'core/routes/app_routes.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_bloc.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_event.dart';
-import 'screens/login_screen.dart';
 
 void main() {
   runApp(
@@ -30,9 +29,7 @@ class ShopOpsApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: const Color(0xFF1E5EFE),
-        textTheme: GoogleFonts.manropeTextTheme(
-          Theme.of(context).textTheme,
-        ),
+        textTheme: GoogleFonts.manropeTextTheme(Theme.of(context).textTheme),
         scaffoldBackgroundColor: Colors.white,
       ),
       initialRoute: AppRoutes.initialRoute,
