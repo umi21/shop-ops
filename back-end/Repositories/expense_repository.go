@@ -224,11 +224,17 @@ func (r *MongoExpenseRepository) GetSummaryByCategory(ctx context.Context, busin
 		})
 	}
 
-	// Group by category
+	// Group by category, handle old data where amount is an empty object
 	pipeline = append(pipeline, bson.M{
 		"$group": bson.M{
-			"_id":   "$category",
-			"total": bson.M{"$sum": bson.M{"$toDecimal": "$amount"}},
+			"_id": "$category",
+			"total": bson.M{"$sum": bson.M{
+				"$cond": bson.A{
+					bson.M{"$in": bson.A{bson.M{"$type": "$amount"}, bson.A{"string", "decimal", "double", "int"}}},
+					bson.M{"$toDecimal": "$amount"},
+					0,
+				},
+			}},
 		},
 	})
 

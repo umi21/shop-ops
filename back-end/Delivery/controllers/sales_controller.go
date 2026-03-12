@@ -49,9 +49,15 @@ func (c *SalesController) verifyBusinessOwnership(ctx *gin.Context, businessID, 
 // @Router       /api/businesses/{businessId}/sales [post]
 // @Security     BearerAuth
 func (c *SalesController) CreateSale(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	var req Domain.CreateSaleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	businessID := req.BusinessID
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id is required in request body"})
 		return
 	}
 
@@ -62,12 +68,6 @@ func (c *SalesController) CreateSale(ctx *gin.Context) {
 	}
 
 	if c.verifyBusinessOwnership(ctx, businessID, userID.(string)) {
-		return
-	}
-
-	var req Domain.CreateSaleRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -110,9 +110,9 @@ func (c *SalesController) CreateSale(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/sales [get]
 // @Security     BearerAuth
 func (c *SalesController) GetSales(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -154,9 +154,9 @@ func (c *SalesController) GetSales(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/sales/{saleId} [get]
 // @Security     BearerAuth
 func (c *SalesController) GetSale(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -198,9 +198,9 @@ func (c *SalesController) GetSale(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/sales/{saleId} [delete]
 // @Security     BearerAuth
 func (c *SalesController) VoidSale(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -242,9 +242,9 @@ func (c *SalesController) VoidSale(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/sales/summary [get]
 // @Security     BearerAuth
 func (c *SalesController) GetSalesSummary(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -285,12 +285,6 @@ func (c *SalesController) GetSalesSummary(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/sales/{saleId} [patch]
 // @Security     BearerAuth
 func (c *SalesController) UpdateSale(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
-	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
-		return
-	}
-
 	saleID := ctx.Param("saleId")
 	if saleID == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Sale ID is required"})
@@ -300,6 +294,12 @@ func (c *SalesController) UpdateSale(ctx *gin.Context) {
 	var req Domain.UpdateSaleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	businessID := req.BusinessID
+	if businessID == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id is required in request body"})
 		return
 	}
 
@@ -333,9 +333,9 @@ func (c *SalesController) UpdateSale(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/sales/stats [get]
 // @Security     BearerAuth
 func (c *SalesController) GetSalesStats(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 

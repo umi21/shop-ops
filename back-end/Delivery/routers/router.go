@@ -59,31 +59,31 @@ func SetupRouter(
 				businessGroup.GET("", businessController.List)
 				businessGroup.GET("/:businessId", businessController.GetById)
 				businessGroup.PATCH("/:businessId", businessController.Update)
+			}
 
-				// Inventory Routes (nested under business)
-				inventoryGroup := businessGroup.Group("/:businessId/inventory/products")
-				{
-					inventoryGroup.POST("", inventoryController.CreateProduct)
-					inventoryGroup.GET("", inventoryController.GetProducts)
-					inventoryGroup.GET("/low-stock", inventoryController.GetLowStock)
-					inventoryGroup.GET("/:productId", inventoryController.GetProduct)
-					inventoryGroup.PATCH("/:productId", inventoryController.UpdateProduct)
-					inventoryGroup.DELETE("/:productId", inventoryController.DeleteProduct)
-					inventoryGroup.POST("/:productId/adjust", inventoryController.AdjustStock)
-					inventoryGroup.GET("/:productId/history", inventoryController.GetStockHistory)
-				}
+			// Inventory Routes
+			inventoryGroup := protected.Group("/inventory/products")
+			{
+				inventoryGroup.POST("", inventoryController.CreateProduct)
+				inventoryGroup.GET("", inventoryController.GetProducts)
+				inventoryGroup.GET("/low-stock", inventoryController.GetLowStock)
+				inventoryGroup.GET("/:productId", inventoryController.GetProduct)
+				inventoryGroup.PATCH("/:productId", inventoryController.UpdateProduct)
+				inventoryGroup.DELETE("/:productId", inventoryController.DeleteProduct)
+				inventoryGroup.POST("/:productId/adjust", inventoryController.AdjustStock)
+				inventoryGroup.GET("/:productId/history", inventoryController.GetStockHistory)
+			}
 
-				// Sales Routes (nested under business)
-				salesGroup := businessGroup.Group("/:businessId/sales")
-				{
-					salesGroup.POST("", salesController.CreateSale)
-					salesGroup.GET("", salesController.GetSales)
-					salesGroup.GET("/summary", salesController.GetSalesSummary)
-					salesGroup.GET("/stats", salesController.GetSalesStats)
-					salesGroup.GET("/:saleId", salesController.GetSale)
-					salesGroup.PATCH("/:saleId", salesController.UpdateSale)
-					salesGroup.DELETE("/:saleId", salesController.VoidSale)
-				}
+			// Sales Routes
+			salesGroup := protected.Group("/sales")
+			{
+				salesGroup.POST("", salesController.CreateSale)
+				salesGroup.GET("", salesController.GetSales)
+				salesGroup.GET("/summary", salesController.GetSalesSummary)
+				salesGroup.GET("/stats", salesController.GetSalesStats)
+				salesGroup.GET("/:saleId", salesController.GetSale)
+				salesGroup.PATCH("/:saleId", salesController.UpdateSale)
+				salesGroup.DELETE("/:saleId", salesController.VoidSale)
 			}
 
 			// Expense Routes

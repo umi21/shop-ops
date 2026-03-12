@@ -19,7 +19,7 @@ type ExpenseController struct {
 }
 
 type RecordExpenseRequest struct {
-	BusinessID string  `json:"businessId" binding:"required"`
+	BusinessID string  `json:"business_id" binding:"required"`
 	Category   string  `json:"category" binding:"required"`
 	Amount     float64 `json:"amount" binding:"required,min=0.01"`
 	Note       string  `json:"note"`
@@ -617,6 +617,7 @@ func (ctrl *ExpenseController) GetSummary(c *gin.Context) {
 
 	summary, err := ctrl.expenseUseCases.GetExpensesByCategory(businessObjID, dateRange)
 	if err != nil {
+		log.Printf("❌ Failed to fetch expense summary: %v", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    "SYS_001",
 			Message: "Failed to fetch summary",

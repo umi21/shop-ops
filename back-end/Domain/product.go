@@ -64,22 +64,25 @@ type StockMovementResponse struct {
 
 // Request/Response structs
 type CreateProductRequest struct {
-	Name                string  `json:"name" validate:"required"`
-	DefaultSellingPrice float64 `json:"default_selling_price" validate:"required,gt=0"`
-	StockQuantity       int     `json:"stock_quantity" validate:"gte=0"`
-	LowStockThreshold   int     `json:"low_stock_threshold" validate:"gte=0"`
+	BusinessID          string  `json:"business_id" binding:"required"`
+	Name                string  `json:"name" binding:"required"`
+	DefaultSellingPrice float64 `json:"default_selling_price" binding:"required,gt=0"`
+	StockQuantity       int     `json:"stock_quantity" binding:"gte=0"`
+	LowStockThreshold   int     `json:"low_stock_threshold" binding:"gte=0"`
 }
 
 type UpdateProductRequest struct {
+	BusinessID          string   `json:"business_id" binding:"required"`
 	Name                *string  `json:"name,omitempty"`
-	DefaultSellingPrice *float64 `json:"default_selling_price,omitempty" validate:"omitempty,gt=0"`
-	LowStockThreshold   *int     `json:"low_stock_threshold,omitempty" validate:"omitempty,gte=0"`
+	DefaultSellingPrice *float64 `json:"default_selling_price,omitempty" binding:"omitempty,gt=0"`
+	LowStockThreshold   *int     `json:"low_stock_threshold,omitempty" binding:"omitempty,gte=0"`
 }
 
 type AdjustStockRequest struct {
-	Quantity int          `json:"quantity" validate:"required"`
-	Type     MovementType `json:"type" validate:"required"`
-	Reason   string       `json:"reason" validate:"required"`
+	BusinessID string       `json:"business_id" binding:"required"`
+	Quantity   int          `json:"quantity" binding:"required"`
+	Type       MovementType `json:"type" binding:"required"`
+	Reason     string       `json:"reason" binding:"required"`
 }
 
 type ProductResponse struct {

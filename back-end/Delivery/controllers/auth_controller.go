@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"net/http"
+	"net/mail"
+	"regexp"
 
 	usecases "shop-ops/Usecases"
 
@@ -22,6 +24,29 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	var req usecases.RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error(), "code": "VAL_001"})
+		return
+	}
+
+	if req.Phone == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "phone is required", "code": "VAL_002"})
+		return
+	}
+
+	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
+	if !validPhone.MatchString(req.Phone) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid phone format", "code": "VAL_002"})
+		return
+	}
+
+	if req.Email != "" {
+		if _, err := mail.ParseAddress(req.Email); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid email format", "code": "VAL_002"})
+			return
+		}
+	}
+
+	if len(req.Password) < 8 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "password must be at least 8 characters", "code": "VAL_002"})
 		return
 	}
 

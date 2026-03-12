@@ -67,40 +67,42 @@ func (s *Sale) Validate() error {
 
 // CreateSaleRequest is the payload for recording a new sale
 type CreateSaleRequest struct {
-	ProductID *string `json:"product_id,omitempty"`
-	UnitPrice float64 `json:"unit_price" validate:"required,gt=0"`
-	Quantity  int     `json:"quantity"   validate:"required,gt=0"`
-	Note      string  `json:"note,omitempty"`
+	BusinessID string  `json:"business_id" binding:"required"`
+	ProductID  *string `json:"product_id,omitempty"`
+	UnitPrice  float64 `json:"unit_price" binding:"required,gt=0"`
+	Quantity   int     `json:"quantity"   binding:"required,gt=0"`
+	Note       string  `json:"note,omitempty"`
 }
 
 // UpdateSaleRequest is the payload for updating a sale (note only, before sync)
 type UpdateSaleRequest struct {
-	Note *string `json:"note,omitempty"`
+	BusinessID string  `json:"business_id" binding:"required"`
+	Note       *string `json:"note,omitempty"`
 }
 
 // SaleListQuery holds query parameters for listing sales
 type SaleListQuery struct {
-	StartDate  string  `form:"start_date"`
-	EndDate    string  `form:"end_date"`
-	ProductID  string  `form:"product_id"`
-	MinAmount  float64 `form:"min_amount"`
-	MaxAmount  float64 `form:"max_amount"`
-	Page       int     `form:"page,default=1"`
-	Limit      int     `form:"limit,default=50"`
-	Sort       string  `form:"sort,default=created_at"`
-	Order      string  `form:"order,default=desc"`
+	StartDate string  `form:"start_date"`
+	EndDate   string  `form:"end_date"`
+	ProductID string  `form:"product_id"`
+	MinAmount float64 `form:"min_amount"`
+	MaxAmount float64 `form:"max_amount"`
+	Page      int     `form:"page,default=1"`
+	Limit     int     `form:"limit,default=50"`
+	Sort      string  `form:"sort,default=created_at"`
+	Order     string  `form:"order,default=desc"`
 }
 
 // SaleResponse is the API representation of a sale
 type SaleResponse struct {
-	ID         string  `json:"id"`
-	BusinessID string  `json:"business_id"`
-	ProductID  *string `json:"product_id,omitempty"`
-	UnitPrice  float64 `json:"unit_price"`
-	Quantity   int     `json:"quantity"`
-	Total      float64 `json:"total"`
-	Note       string  `json:"note,omitempty"`
-	IsVoided   bool    `json:"is_voided"`
+	ID         string    `json:"id"`
+	BusinessID string    `json:"business_id"`
+	ProductID  *string   `json:"product_id,omitempty"`
+	UnitPrice  float64   `json:"unit_price"`
+	Quantity   int       `json:"quantity"`
+	Total      float64   `json:"total"`
+	Note       string    `json:"note,omitempty"`
+	IsVoided   bool      `json:"is_voided"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 

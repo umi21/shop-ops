@@ -48,9 +48,15 @@ func (c *InventoryController) verifyBusinessOwnership(ctx *gin.Context, business
 // @Router       /api/businesses/{businessId}/inventory/products [post]
 // @Security     BearerAuth
 func (c *InventoryController) CreateProduct(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	var req Domain.CreateProductRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	businessID := req.BusinessID
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id is required in request body"})
 		return
 	}
 
@@ -61,12 +67,6 @@ func (c *InventoryController) CreateProduct(ctx *gin.Context) {
 	}
 
 	if c.verifyBusinessOwnership(ctx, businessID, userID.(string)) {
-		return
-	}
-
-	var req Domain.CreateProductRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -97,9 +97,9 @@ func (c *InventoryController) CreateProduct(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/inventory/products [get]
 // @Security     BearerAuth
 func (c *InventoryController) GetProducts(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -132,9 +132,9 @@ func (c *InventoryController) GetProducts(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/inventory/products/{productId} [get]
 // @Security     BearerAuth
 func (c *InventoryController) GetProduct(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -169,15 +169,21 @@ func (c *InventoryController) GetProduct(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/inventory/products/{productId} [patch]
 // @Security     BearerAuth
 func (c *InventoryController) UpdateProduct(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
-	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
-		return
-	}
-
 	productID := ctx.Param("productId")
 	if productID == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Product ID is required"})
+		return
+	}
+
+	var req Domain.UpdateProductRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	businessID := req.BusinessID
+	if businessID == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id is required in request body"})
 		return
 	}
 
@@ -188,12 +194,6 @@ func (c *InventoryController) UpdateProduct(ctx *gin.Context) {
 	}
 
 	if c.verifyBusinessOwnership(ctx, businessID, userID.(string)) {
-		return
-	}
-
-	var req Domain.UpdateProductRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -220,9 +220,9 @@ func (c *InventoryController) UpdateProduct(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/inventory/products/{productId} [delete]
 // @Security     BearerAuth
 func (c *InventoryController) DeleteProduct(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -266,15 +266,21 @@ func (c *InventoryController) DeleteProduct(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/inventory/products/{productId}/adjust [post]
 // @Security     BearerAuth
 func (c *InventoryController) AdjustStock(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
-	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
-		return
-	}
-
 	productID := ctx.Param("productId")
 	if productID == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Product ID is required"})
+		return
+	}
+
+	var req Domain.AdjustStockRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	businessID := req.BusinessID
+	if businessID == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id is required in request body"})
 		return
 	}
 
@@ -285,12 +291,6 @@ func (c *InventoryController) AdjustStock(ctx *gin.Context) {
 	}
 
 	if c.verifyBusinessOwnership(ctx, businessID, userID.(string)) {
-		return
-	}
-
-	var req Domain.AdjustStockRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -314,9 +314,9 @@ func (c *InventoryController) AdjustStock(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/inventory/products/low-stock [get]
 // @Security     BearerAuth
 func (c *InventoryController) GetLowStock(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 
@@ -344,9 +344,9 @@ func (c *InventoryController) GetLowStock(ctx *gin.Context) {
 // @Router       /api/businesses/{businessId}/inventory/products/{productId}/history [get]
 // @Security     BearerAuth
 func (c *InventoryController) GetStockHistory(ctx *gin.Context) {
-	businessID := ctx.Param("businessId")
+	businessID := ctx.Query("business_id")
 	if businessID == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Business ID is required"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "business_id query parameter is required"})
 		return
 	}
 

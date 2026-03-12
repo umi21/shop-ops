@@ -68,7 +68,7 @@ func (uc *salesUseCase) CreateSale(businessID, userID string, req Domain.CreateS
 			return nil, fmt.Errorf("failed to find product: %w", err)
 		}
 		if product == nil {
-			return nil, fmt.Errorf("product not found")
+			return nil, fmt.Errorf("VAL_005: specified product does not exist")
 		}
 		if product.BusinessID.Hex() != businessID {
 			return nil, fmt.Errorf("product does not belong to this business")

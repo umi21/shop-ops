@@ -31,6 +31,14 @@ func (c *BusinessController) Create(ctx *gin.Context) {
 		return
 	}
 
+	if req.Currency != "" {
+		validCurrencies := map[string]bool{"NGN": true, "KES": true, "GHS": true, "USD": true, "EUR": true, "ZAR": true, "RWF": true, "UGX": true, "TZS": true}
+		if !validCurrencies[req.Currency] {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid currency", "supported_currencies": []string{"NGN", "KES", "GHS", "USD", "EUR", "ZAR", "RWF", "UGX", "TZS"}, "code": "VAL_001"})
+			return
+		}
+	}
+
 	business, err := c.businessUseCases.Create(userId, &req)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "code": "BUS_001"})
