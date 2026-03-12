@@ -21,12 +21,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} h-screen flex overflow-hidden bg-background text-foreground`}
-      >
-        <ThemeProvider>
-          <main className="flex-1">{children}</main>
-        </ThemeProvider>
+      <body className="min-h-screen  flex  bg-gray-900">
+        <main className="flex-1 ">
+          {children}
+        </main>
       </body>
     </html>
   );
