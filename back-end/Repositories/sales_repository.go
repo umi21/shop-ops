@@ -259,3 +259,62 @@ func (r *SalesRepository) GetSummary(businessID string, startDate, endDate time.
 		VoidedCount:  int(voidedCount),
 	}, nil
 }
+
+// FindAllByBusinessID returns all non-voided sales for a business (for full restore)
+func (r *SalesRepository) FindAllByBusinessID(businessID string) ([]Domain.Sale, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	objBusinessID, err := primitive.ObjectIDFromHex(businessID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid business ID: %w", err)
+	}
+
+	filter := bson.M{
+		"business_id": objBusinessID,
+		"is_voided":   false,
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find sales: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var sales []Domain.Sale
+	if err := cursor.All(ctx, &sales); err != nil {
+		return nil, fmt.Errorf("failed to decode sales: %w", err)
+	}
+
+	return sales, nil
+}
+
+// FindSince returns all non-voided sales for a business created since the given timestamp
+func (r *SalesRepository) FindSince(businessID string, since time.Time) ([]Domain.Sale, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	objBusinessID, err := primitive.ObjectIDFromHex(businessID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid business ID: %w", err)
+	}
+
+	filter := bson.M{
+		"business_id": objBusinessID,
+		"is_voided":   false,
+		"created_at":  bson.M{"$gte": since},
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find sales: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var sales []Domain.Sale
+	if err := cursor.All(ctx, &sales); err != nil {
+		return nil, fmt.Errorf("failed to decode sales: %w", err)
+	}
+
+	return sales, nil
+}

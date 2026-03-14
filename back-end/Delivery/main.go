@@ -73,6 +73,7 @@ func main() {
 	salesUC := usecases.NewSalesUseCase(salesRepo, inventoryRepo, businessRepo)
 	transactionUsecase := usecases.NewTransactionUseCases(transactionRepo)
 	profitUC := usecases.NewProfitUseCase(salesRepo, expenseRepo, businessRepo)
+	restoreUC := usecases.NewRestoreUseCases(salesRepo, expenseRepo, inventoryRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(userUC)
@@ -83,6 +84,7 @@ func main() {
 	salesController := controllers.NewSalesController(salesUC, businessUC)
 	transactionController := controllers.NewTransactionController(transactionUsecase, businessUC)
 	profitController := controllers.NewProfitController(profitUC, businessUC)
+	restoreController := controllers.NewRestoreController(restoreUC, businessUC)
 
 	// Router
 	r := routers.SetupRouter(
@@ -95,6 +97,7 @@ func main() {
 		salesController,
 		transactionController,
 		profitController,
+		restoreController,
 	)
 
 	port := os.Getenv("PORT")

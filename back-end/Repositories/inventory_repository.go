@@ -336,3 +336,58 @@ func (r *InventoryRepository) GetStockHistory(productID string, limit int) ([]Do
 
 	return movements, nil
 }
+
+// FindAllByBusinessID returns all products for a business (for full restore)
+func (r *InventoryRepository) FindAllByBusinessID(businessID string) ([]Domain.Product, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	objBusinessID, err := primitive.ObjectIDFromHex(businessID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid business ID: %w", err)
+	}
+
+	filter := bson.M{"business_id": objBusinessID}
+
+	cursor, err := r.productsCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find products: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var products []Domain.Product
+	if err := cursor.All(ctx, &products); err != nil {
+		return nil, fmt.Errorf("failed to decode products: %w", err)
+	}
+
+	return products, nil
+}
+
+// FindSince returns all products for a business updated since the given timestamp
+func (r *InventoryRepository) FindSince(businessID string, since time.Time) ([]Domain.Product, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	objBusinessID, err := primitive.ObjectIDFromHex(businessID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid business ID: %w", err)
+	}
+
+	filter := bson.M{
+		"business_id": objBusinessID,
+		"updated_at":  bson.M{"$gte": since},
+	}
+
+	cursor, err := r.productsCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find products: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var products []Domain.Product
+	if err := cursor.All(ctx, &products); err != nil {
+		return nil, fmt.Errorf("failed to decode products: %w", err)
+	}
+
+	return products, nil
+}

@@ -34,6 +34,8 @@ type ExpenseRepository interface {
 	Create(ctx context.Context, expense *domain.Expense) error
 	GetByID(ctx context.Context, id primitive.ObjectID) (*domain.Expense, error)
 	GetByBusinessID(ctx context.Context, filter ExpenseFilter) ([]*domain.Expense, int64, error)
+	GetAllByBusinessID(ctx context.Context, businessID primitive.ObjectID) ([]*domain.Expense, error)
+	GetSince(ctx context.Context, businessID primitive.ObjectID, since time.Time) ([]*domain.Expense, error)
 	Update(ctx context.Context, expense *domain.Expense) error
 	Void(ctx context.Context, id primitive.ObjectID) error
 	GetSummaryByCategory(ctx context.Context, businessID primitive.ObjectID, startDate, endDate *time.Time) (map[domain.ExpenseCategory]decimal.Decimal, decimal.Decimal, error)
@@ -268,4 +270,47 @@ func (r *MongoExpenseRepository) GetSummaryByCategory(ctx context.Context, busin
 	}
 
 	return summary, grandTotal, nil
+}
+
+// GetAllByBusinessID returns all non-voided expenses for a business (for full restore)
+func (r *MongoExpenseRepository) GetAllByBusinessID(ctx context.Context, businessID primitive.ObjectID) ([]*domain.Expense, error) {
+	filter := bson.M{
+		"business_id": businessID,
+		"is_voided":   false,
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var expenses []*domain.Expense
+	if err = cursor.All(ctx, &expenses); err != nil {
+		return nil, err
+	}
+
+	return expenses, nil
+}
+
+// GetSince returns all non-voided expenses for a business created since the given timestamp
+func (r *MongoExpenseRepository) GetSince(ctx context.Context, businessID primitive.ObjectID, since time.Time) ([]*domain.Expense, error) {
+	filter := bson.M{
+		"business_id": businessID,
+		"is_voided":   false,
+		"created_at":  bson.M{"$gte": since},
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var expenses []*domain.Expense
+	if err = cursor.All(ctx, &expenses); err != nil {
+		return nil, err
+	}
+
+	return expenses, nil
 }

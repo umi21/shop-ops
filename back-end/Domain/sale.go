@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+
 // Sale represents a sales transaction
 type Sale struct {
 	ID         primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
@@ -136,6 +137,8 @@ type SaleRepository interface {
 	Create(sale *Sale) error
 	FindByID(id string) (*Sale, error)
 	FindByBusinessID(businessID string, query SaleListQuery) ([]Sale, int64, error)
+	FindAllByBusinessID(businessID string) ([]Sale, error)
+	FindSince(businessID string, since time.Time) ([]Sale, error)
 	UpdateNote(id string, note string) error
 	VoidSale(id string) error
 	GetSummary(businessID string, startDate, endDate time.Time) (*SaleSummaryResponse, error)

@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+
 type Product struct {
 	ID                  primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	BusinessID          primitive.ObjectID `bson:"business_id" json:"business_id"`
@@ -123,6 +124,8 @@ type ProductRepository interface {
 	Create(product *Product) error
 	FindByID(id string) (*Product, error)
 	FindByBusinessID(businessID string, query ProductListQuery) ([]Product, int64, error)
+	FindAllByBusinessID(businessID string) ([]Product, error)
+	FindSince(businessID string, since time.Time) ([]Product, error)
 	Update(product *Product) error
 	Delete(id string) error
 	AdjustStock(productID string, quantity int, movementType MovementType, reason string, referenceID *string, userID string) error
