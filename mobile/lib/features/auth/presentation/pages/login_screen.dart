@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/routes/app_routes.dart';
 import 'signup_screen.dart';
-
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:flutter/services.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -10,13 +11,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _numberController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _numberController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -75,27 +76,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Email
+              // Phone number
               Text(
-                'Email Address',
+                'Phone Number',
                 style: TextStyle(
                   color: Colors.grey[800],
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
+              IntlPhoneField(
+                controller: _numberController,
+                initialCountryCode: 'ET',
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
-                  hintText: 'owner@yourshop.com',
-                  prefixIcon: const Icon(Icons.email_outlined),
+                  hintText: '234 567 8901',
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 16,
-                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: Colors.grey.shade200),
@@ -105,6 +104,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: BorderSide(color: Colors.grey.shade200),
                   ),
                 ),
+                onChanged: (phone) {
+                  // phone.completeNumber gives you e.g. +12345678901
+                },
               ),
               const SizedBox(height: 16),
 

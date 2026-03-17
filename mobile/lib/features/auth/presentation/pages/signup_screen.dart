@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:flutter/services.dart';
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
 
@@ -9,7 +10,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _numberController = TextEditingController();
   final _businessController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
@@ -17,7 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
+    _numberController.dispose();
     _businessController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -107,32 +108,37 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Email Address
+              // Phone number
               Text(
-                'Email Address',
+                'Phone Number',
                 style: TextStyle(
                   color: Colors.grey[800],
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 8),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
+              IntlPhoneField(
+                controller: _numberController,
+                initialCountryCode: 'ET',
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
-                  hintText: 'john@company.com',
-                  prefixIcon: const Icon(Icons.email_outlined),
+                  hintText: '234 567 8901',
                   filled: true,
-                  fillColor: Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 16,
-                  ),
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade100),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
                   ),
                 ),
+                onChanged: (phone) {
+                  // phone.completeNumber gives you e.g. +12345678901
+                },
               ),
               const SizedBox(height: 14),
 
@@ -270,7 +276,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
                       child: const Text(
                         'Log In',
                         style: TextStyle(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/widgets/expandable_fab.dart';
 import '../manager/bloc/inventory_bloc.dart';
 import '../manager/bloc/inventory_event.dart';
 import '../manager/bloc/inventory_state.dart';
@@ -154,17 +156,20 @@ class InventoryPage extends StatelessWidget {
         ),
       ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddProductPage()),
-          );
-        },
-        backgroundColor: const Color(0xFF1E5EFE),
-        elevation: 6,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 30, color: Colors.white),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+        child: ExpandableFab(
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: 'Add Item',
+          backgroundColor: const Color(0xFF1E5EFE),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddProductPage()),
+            );
+          },
+          expandOnHover: true,
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );

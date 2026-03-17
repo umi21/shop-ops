@@ -4,7 +4,8 @@ import '../../../sales/presentation/sales_screen.dart';
 import '../../../inventory/presentation/pages/inventory_page.dart';
 import '../../../expense/presentation/pages/expense_page.dart';
 import '../../../../core/widgets/custom_bottom_nav.dart';
-// future: reports and settings imports
+import '../../../settings/presentation/settings.dart';  
+// future: reports 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -21,7 +22,7 @@ class _MainScreenState extends State<MainScreen> {
     const InventoryPage(),
     const SalesScreen(),
     const ExpensePage(),
-    const Center(child: Text('Settings Screen - Coming Soon')),
+    const SettingsPage(),
   ];
 
   void _onItemTapped(int index) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/widgets/expandable_fab.dart';
 import '../../../models/sales.dart';
 
 class SalesScreen extends StatefulWidget {
@@ -118,13 +119,17 @@ class _SalesScreenState extends State<SalesScreen> {
                     'Sales History',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                   ),
-                  _AddButton(
-                    onTap: () => showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => const _QuickAddSaleSheet(),
-                    ),
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Color(0xFFE2E8F0),
+                        child: Icon(
+                          Icons.person,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -199,6 +204,21 @@ class _SalesScreenState extends State<SalesScreen> {
           ],
         ),
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+        child: ExpandableFab(
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: 'Add Sale',
+          backgroundColor: primary,
+          onTap: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => const _QuickAddSaleSheet(),
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

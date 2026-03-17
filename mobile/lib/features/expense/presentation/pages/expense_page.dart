@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/widgets/expandable_fab.dart';
 import '../manager/bloc/expense_bloc.dart';
 import '../manager/bloc/expense_event.dart';
 import '../manager/bloc/expense_state.dart';
@@ -33,29 +35,13 @@ class ExpensePage extends StatelessWidget {
                             color: Color(0xFF1E293B),
                           ),
                         ),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.search,
-                                color: Color(0xFF1E5EFE),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const CircleAvatar(
-                              radius: 20,
-                              backgroundColor: Color(0xFFE2E8F0),
-                              child: Icon(
-                                Icons.person,
-                                color: Color(0xFF475569),
-                              ),
-                            ),
-                          ],
+                        const CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Color(0xFFE2E8F0),
+                          child: Icon(
+                            Icons.person,
+                            color: Color(0xFF475569),
+                          ),
                         ),
                       ],
                     ),
@@ -235,47 +221,29 @@ class ExpensePage extends StatelessWidget {
             ),
 
             floatingActionButton: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    final bloc = context.read<ExpenseBloc>();
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (bottomSheetContext) {
-                        return BlocProvider.value(
-                          value: bloc,
-                          child: const QuickAddExpenseModal(),
-                        );
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text(
-                    'Add Expense',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E5EFE),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 6,
-                    shadowColor: const Color(0xFF1E5EFE).withOpacity(0.5),
-                  ),
-                ),
+              padding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+              child: ExpandableFab(
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: 'Add Expense',
+                backgroundColor: const Color(0xFF1E5EFE),
+                onTap: () {
+                  final bloc = context.read<ExpenseBloc>();
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (bottomSheetContext) {
+                      return BlocProvider.value(
+                        value: bloc,
+                        child: const QuickAddExpenseModal(),
+                      );
+                    },
+                  );
+                },
               ),
             ),
             floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerFloat,
+                FloatingActionButtonLocation.endFloat,
           );
         },
       ),

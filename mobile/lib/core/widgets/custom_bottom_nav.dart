@@ -4,6 +4,7 @@ import '../../features/dashboard/presentation/pages/dashboard_screen.dart';
 import '../../features/sales/presentation/sales_screen.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/expense/presentation/pages/expense_page.dart';
+import '../../features/settings/presentation/settings.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -117,21 +118,9 @@ class CustomBottomNav extends StatelessWidget {
       case 4:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const _SettingsScreen()),
+          MaterialPageRoute(builder: (_) => const SettingsPage()),
         );
         break;
     }
-  }
-}
-
-class _SettingsScreen extends StatelessWidget {
-  const _SettingsScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: const Center(child: Text('Settings coming soon')),
-    );
   }
 }
