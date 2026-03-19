@@ -15,6 +15,7 @@ func SetupRouter(
 	jwtService *infrastructure.JWTService,
 	expenseController *controllers.ExpenseController,
 	transactionController *controllers.TransactionController,
+	syncController *controllers.SyncController,
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -77,6 +78,14 @@ func SetupRouter(
 			transactionGroup := protected.Group("/transactions")
 			{
 				transactionGroup.GET("", transactionController.GetTransactions)
+			}
+
+			// Sync Routes (Offline-first data synchronization)
+			syncGroup := protected.Group("/sync")
+			{
+				syncGroup.POST("/batch", syncController.SyncBatch)
+				syncGroup.GET("/status", syncController.GetSyncStatus)
+				syncGroup.GET("/history", syncController.GetSyncHistory)
 			}
 
 			log.Println("=== ROUTES SAVED ===")
