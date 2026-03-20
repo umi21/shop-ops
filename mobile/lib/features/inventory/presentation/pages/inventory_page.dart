@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/routes/app_routes.dart';
 
 import '../../../../core/widgets/expandable_fab.dart';
 import '../manager/bloc/inventory_bloc.dart';
@@ -9,8 +10,15 @@ import '../widgets/product_card.dart';
 import 'add_product_page.dart';
 import 'product_details_page.dart';
 
-class InventoryPage extends StatelessWidget {
+class InventoryPage extends StatefulWidget {
   const InventoryPage({Key? key}) : super(key: key);
+
+  @override
+  State<InventoryPage> createState() => _InventoryPageState();
+}
+
+class _InventoryPageState extends State<InventoryPage> {
+  bool _avatarPressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +42,21 @@ class InventoryPage extends StatelessWidget {
                       color: Color(0xFF1E293B),
                     ),
                   ),
-                  CircleAvatar(
-                    backgroundColor: const Color(0xFFE2E8F0),
-                    child: const Icon(Icons.person, color: Color(0xFF475569)),
+                  GestureDetector(
+                    onTapDown: (_) => setState(() => _avatarPressed = true),
+                    onTapUp: (_) {
+                      setState(() => _avatarPressed = false);
+                      Navigator.pushNamed(context, AppRoutes.profileRoute);
+                    },
+                    onTapCancel: () => setState(() => _avatarPressed = false),
+                    child: AnimatedScale(
+                      scale: _avatarPressed ? 0.88 : 1.0,
+                      duration: const Duration(milliseconds: 100),
+                      child: CircleAvatar(
+                        backgroundColor: const Color(0xFFE2E8F0),
+                        child: const Icon(Icons.person, color: Color(0xFF475569)),
+                      ),
+                    ),
                   ),
                 ],
               ),

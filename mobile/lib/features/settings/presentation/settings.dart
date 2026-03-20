@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/routes/app_routes.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -10,31 +11,16 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _lowStockAlerts = true;
   bool _dailySalesSummary = true;
+  bool _savePressed = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: TextButton.icon(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, size: 14, color: Color(0xFF1765FF)),
-          label: const Text('Dashboard', style: TextStyle(color: Color(0xFF1765FF))),
-        ),
-        leadingWidth: 130,
-        actions: [
-          TextButton(
-            onPressed: () {},
-            child: const Text('Done', style: TextStyle(color: Color(0xFF1765FF), fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: 60),
 
           const Text(
             'Settings',
@@ -44,44 +30,46 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 20),
 
           // Profile card
-          _SettingsCard(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Color(0xFFC6A77D),
-                      child: Icon(Icons.person, color: Colors.white, size: 28),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Shemsu Shop',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'owner@shemsusuq.com',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
-                          ),
-                        ],
+          GestureDetector(
+            onTap: () => Navigator.pushNamed(context, AppRoutes.profileRoute),
+            child: _SettingsCard(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Color(0xFFC6A77D),
+                        child: Icon(Icons.person, color: Colors.white, size: 28),
                       ),
-                    ),
-                    const Icon(Icons.chevron_right, color: Colors.grey),
-                  ],
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Shop-Ops Manager',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'owner@shop-ops.com',
+                              style: TextStyle(color: Colors.grey, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: Colors.grey),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
 
           const SizedBox(height: 28),
 
-          // App Preferences
           const _SectionTitle('APP PREFERENCES'),
           _SettingsCard(
             children: [
@@ -117,7 +105,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
           const SizedBox(height: 28),
 
-          // Notification Settings
           const _SectionTitle('NOTIFICATION SETTINGS'),
           _SettingsCard(
             children: [
@@ -130,12 +117,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: _lowStockAlerts,
                   onChanged: (v) => setState(() => _lowStockAlerts = v),
                   activeColor: Colors.white,
-                  activeTrackColor: const Color(0xFF34C759),
+                  activeTrackColor: const Color(0xFF1E5EFE),
                 ),
               ),
               const _Divider(),
               _IconTile(
-                iconColor: const Color(0xFF4CD964),
+                iconColor: const Color(0xFF1E5EFE),
                 icon: Icons.bar_chart,
                 title: 'Daily Sales Summary',
                 subtitle: 'Receive EOD report at 9:00 PM',
@@ -143,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: _dailySalesSummary,
                   onChanged: (v) => setState(() => _dailySalesSummary = v),
                   activeColor: Colors.white,
-                  activeTrackColor: const Color(0xFF34C759),
+                  activeTrackColor: const Color(0xFF1E5EFE),
                 ),
               ),
             ],
@@ -151,7 +138,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
           const SizedBox(height: 28),
 
-          // Data Management
           const _SectionTitle('DATA MANAGEMENT'),
           _SettingsCard(
             children: [
@@ -190,6 +176,47 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
 
+          const SizedBox(height: 28),
+
+          // Save Settings button
+          GestureDetector(
+            onTapDown: (_) => setState(() => _savePressed = true),
+            onTapUp: (_) => setState(() => _savePressed = false),
+            onTapCancel: () => setState(() => _savePressed = false),
+            child: AnimatedScale(
+              scale: _savePressed ? 0.97 : 1.0,
+              duration: const Duration(milliseconds: 80),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 80),
+                height: 54,
+                decoration: BoxDecoration(
+                  color: _savePressed
+                      ? const Color(0xFF0D4FCC)
+                      : const Color(0xFF1765FF),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: _savePressed
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: const Color(0xFF1765FF).withOpacity(0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'Save Settings',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           const SizedBox(height: 40),
         ],
       ),
@@ -197,7 +224,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-// Groups tiles into a white rounded card
 class _SettingsCard extends StatelessWidget {
   final List<Widget> children;
   const _SettingsCard({required this.children});
@@ -209,14 +235,11 @@ class _SettingsCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 }
 
-// A single tile with a colored icon container
 class _IconTile extends StatelessWidget {
   final Color iconColor;
   final IconData icon;
@@ -276,7 +299,6 @@ class _IconTile extends StatelessWidget {
   }
 }
 
-// Thin divider indented to align with tile text
 class _Divider extends StatelessWidget {
   const _Divider();
 

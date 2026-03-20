@@ -5,6 +5,7 @@ import '../../features/inventory/presentation/pages/add_product_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_screen.dart';
 import '../../features/auth/presentation/pages/signup_screen.dart';
 import '../../features/settings/presentation/settings.dart';
+import '../../features/auth/presentation/pages/profile_screen.dart';
 
 class AppRoutes {
   static const String initialRoute = '/onboarding';
@@ -14,6 +15,7 @@ class AppRoutes {
   static const String mainRoute = '/main';
   static const String addProductRoute = '/add-product';
   static const String settingsRoute = '/settings';
+  static const String profileRoute = '/profile';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -23,6 +25,7 @@ class AppRoutes {
       addProductRoute: (context) => const AddProductPage(),
       signupRoute: (context) => const SignupScreen(),
       settingsRoute: (context) => const SettingsPage(),
+      profileRoute: (context) => const ProfileScreen(),
     };
   }
 }

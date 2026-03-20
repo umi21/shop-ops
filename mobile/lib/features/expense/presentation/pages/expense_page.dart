@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/routes/app_routes.dart';
 
 import '../../../../core/widgets/expandable_fab.dart';
 import '../manager/bloc/expense_bloc.dart';
@@ -8,8 +9,15 @@ import '../manager/bloc/expense_state.dart';
 import '../widgets/expense_card.dart';
 import '../widgets/quick_add_expense_modal.dart';
 
-class ExpensePage extends StatelessWidget {
+class ExpensePage extends StatefulWidget {
   const ExpensePage({Key? key}) : super(key: key);
+
+  @override
+  State<ExpensePage> createState() => _ExpensePageState();
+}
+
+class _ExpensePageState extends State<ExpensePage> {
+  bool _avatarPressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +43,29 @@ class ExpensePage extends StatelessWidget {
                             color: Color(0xFF1E293B),
                           ),
                         ),
-                        const CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Color(0xFFE2E8F0),
-                          child: Icon(
-                            Icons.person,
-                            color: Color(0xFF475569),
+                        GestureDetector(
+                          onTapDown: (_) =>
+                              setState(() => _avatarPressed = true),
+                          onTapUp: (_) {
+                            setState(() => _avatarPressed = false);
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.profileRoute,
+                            );
+                          },
+                          onTapCancel: () =>
+                              setState(() => _avatarPressed = false),
+                          child: AnimatedScale(
+                            scale: _avatarPressed ? 0.88 : 1.0,
+                            duration: const Duration(milliseconds: 100),
+                            child: const CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Color(0xFFE2E8F0),
+                              child: Icon(
+                                Icons.person,
+                                color: Color(0xFF475569),
+                              ),
+                            ),
                           ),
                         ),
                       ],

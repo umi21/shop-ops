@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
-import '../../../core/widgets/expandable_fab.dart';
+import '../../../../core/routes/app_routes.dart';
+import 'package:intl/intl.dart';
+import '../../../../core/widgets/expandable_fab.dart';
 import '../../../models/sales.dart';
 
 class SalesScreen extends StatefulWidget {
@@ -12,14 +13,15 @@ class SalesScreen extends StatefulWidget {
 
 class _SalesScreenState extends State<SalesScreen> {
   int _selectedTab = 0;
+  bool _avatarPressed = false; // added
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
   static const primary = Color(0xFF1765FF);
 
-  final List<SaleGroup> _allGroups = const [
+  final List<SaleGroup> _allGroups = [
     SaleGroup(
-      label: 'TODAY, OCT 24',
+      label:  'TODAY, ${DateFormat('MMM d').format(DateTime.now()).toUpperCase()}',
       total: 245.50,
       sales: [
         Sale(
@@ -121,12 +123,29 @@ class _SalesScreenState extends State<SalesScreen> {
                   ),
                   Row(
                     children: [
-                      const CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Color(0xFFE2E8F0),
-                        child: Icon(
-                          Icons.person,
-                          color: Color(0xFF475569),
+                      // added GestureDetector + AnimatedScale
+                      GestureDetector(
+                        onTapDown: (_) =>
+                            setState(() => _avatarPressed = true),
+                        onTapUp: (_) {
+                          setState(() => _avatarPressed = false);
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.profileRoute,
+                          );
+                        },
+                        onTapCancel: () =>
+                            setState(() => _avatarPressed = false),
+                        child: AnimatedScale(
+                          scale: _avatarPressed ? 0.88 : 1.0,
+                          duration: const Duration(milliseconds: 100),
+                          child: const CircleAvatar(
+                            backgroundColor: Color(0xFFE2E8F0),
+                            child: Icon(
+                              Icons.person,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
                         ),
                       ),
                     ],
