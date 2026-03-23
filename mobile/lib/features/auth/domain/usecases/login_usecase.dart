@@ -1,21 +1,20 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:mobile/core/error/failure.dart';
+import 'package:mobile/core/error/failures.dart';
+import 'package:mobile/core/usecases/usecase.dart';
 import 'package:mobile/features/auth/domain/entities/user.dart';
-import 'package:mobile/features/auth/domain/repository/user_repository.dart';
+import 'package:mobile/features/auth/domain/repositories/auth_repository.dart';
 
-class LoginUsecase {
-  final UserRepository userRepository;
+class LoginUseCase implements UseCase<User, LoginParams> {
+  final AuthRepository repository;
 
-  LoginUsecase(this.userRepository);
+  LoginUseCase(this.repository);
 
+  @override
   Future<Either<Failure, User>> call(LoginParams params) async {
-    //TODO: Auth steps
-    
-    return await userRepository.login(params.email, params.password);
+    return await repository.login(params.email, params.password);
   }
 }
-
 
 class LoginParams extends Equatable {
   final String email;
@@ -24,5 +23,5 @@ class LoginParams extends Equatable {
   const LoginParams({required this.email, required this.password});
 
   @override
-  List<Object> get props => [email, password];
+  List<Object?> get props => [email, password];
 }
