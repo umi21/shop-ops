@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import React, { useEffect, useMemo, useState } from "react";
 import PageTitle from "@/app/components/ui/PageTitle";
 import Card from "@/app/components/ui/Card";
@@ -154,6 +156,7 @@ const mapApiUserToProfile = (user: ApiUser, current: ProfileDetails): ProfileDet
 });
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [savedProfile, setSavedProfile] = useState<ProfileDetails>(defaultProfile);
   const [draftProfile, setDraftProfile] = useState<ProfileDetails>(defaultProfile);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -169,6 +172,25 @@ export default function ProfilePage() {
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        const userProfile = {
+          ...defaultProfile,
+          fullName: parsedUser.name || defaultProfile.fullName,
+          email: parsedUser.email || defaultProfile.email,
+          phone: parsedUser.phone || defaultProfile.phone,
+        };
+        setSavedProfile(userProfile);
+        setDraftProfile(userProfile);
+      } catch (e) {
+        console.error("Failed to parse user data from localStorage", e);
+      }
+    }
+  }, []);
 
   const activeProfile = isEditing ? draftProfile : savedProfile;
 
@@ -294,6 +316,13 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
+  const   handleLogout = () => {
+    localStorage.removeItem("user");
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    router.push("/login");
+  };
+
   const handleChangePassword = async () => {
     setPasswordError(null);
     setPasswordSuccess(null);
@@ -333,10 +362,18 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col space-y-4">
-      <PageTitle
-        title="Profile"
-        subtitle="Manage personal information, preferences, and security settings"
-      />
+      <div className="flex justify-between items-center bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm">
+        <PageTitle
+          title="Profile"
+          subtitle="Manage personal information, preferences, and security settings"
+        />
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-50 text-red-600 font-medium text-sm rounded-lg hover:bg-red-100 transition"
+        >
+          Logout
+        </button>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card
@@ -588,7 +625,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
             <User className="h-4 w-4 text-indigo-500" />
@@ -707,7 +744,7 @@ export default function ProfilePage() {
       </div>
 
 
-    
+
     </div>
   );
 }

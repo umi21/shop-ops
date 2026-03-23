@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"time"
 
@@ -14,14 +13,21 @@ import (
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
 	// Load environment variables
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
+		// This is fine in production where env vars are set directly
 	}
+
+	// Initialize logger
+	logger := infrastructure.NewLogger(
+		os.Getenv("LOG_LEVEL"),
+		os.Getenv("LOG_FILE"),
+	)
+
+	logger.Info("APP", "Starting ShopOps backend...")
 
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
@@ -36,54 +42,92 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
+	client, err := mongo.Connect(ctx, infrastructure.NewMongoClientOptions(mongoURI))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal("DB", "Failed to connect to MongoDB: %v", err)
 	}
 	defer func() {
 		if err = client.Disconnect(context.Background()); err != nil {
-			log.Fatal(err)
+			logger.Error("DB", "Error disconnecting from MongoDB: %v", err)
 		}
 	}()
 
 	// Ping database
 	if err = client.Ping(ctx, nil); err != nil {
-		log.Fatal("Could not connect to MongoDB:", err)
+		logger.Fatal("DB", "Could not ping MongoDB: %v", err)
 	}
-	log.Println("Connected to MongoDB")
+	logger.Info("DB", "Connected to MongoDB successfully")
 
 	db := client.Database(dbName)
 
 	// Repositories
 	userRepo := repositories.NewUserRepository(db)
 	businessRepo := repositories.NewBusinessRepository(db)
-	expenseRepo := repositories.NewExpenseRepository(db) 
+	expenseRepo := repositories.NewExpenseRepository(db)
+	inventoryRepo := repositories.NewInventoryRepository(db)
+	salesRepo := repositories.NewSalesRepository(db)
+	transactionRepo := repositories.NewTransactionRepository(db)
+	reportRepo := repositories.NewReportRepository(db)
+	exportRepo := repositories.NewExportRepository(db)
+	syncRepo := repositories.NewSyncRepository(db)
 
 	// Services
 	pwdService := infrastructure.NewPasswordService()
 	jwtService := infrastructure.NewJWTService()
+	exportService := infrastructure.NewExportService("tmp/exports")
 
 	// Use Cases
 	userUC := usecases.NewUserUseCases(userRepo, pwdService, jwtService)
 	businessUC := usecases.NewBusinessUseCases(businessRepo)
 	expenseUsecase := usecases.NewExpenseUseCases(expenseRepo)
+	inventoryUC := usecases.NewInventoryUseCase(inventoryRepo, businessRepo)
+	salesUC := usecases.NewSalesUseCase(salesRepo, inventoryRepo, businessRepo)
+	transactionUsecase := usecases.NewTransactionUseCases(transactionRepo)
+	profitUC := usecases.NewProfitUseCase(salesRepo, expenseRepo, businessRepo)
+	restoreUC := usecases.NewRestoreUseCases(salesRepo, expenseRepo, inventoryRepo)
+	reportUC := usecases.NewReportUsecases(reportRepo, businessRepo)
+	exportUC := usecases.NewExportUsecases(exportRepo, exportService, salesRepo, inventoryRepo, expenseRepo, transactionRepo)
+	syncUsecase := usecases.NewSyncUseCases(syncRepo)
 
 	// Controllers
 	authController := controllers.NewAuthController(userUC)
 	userController := controllers.NewUserController(userUC)
 	businessController := controllers.NewBusinessController(businessUC)
-	expenseController := controllers.NewExpenseController(expenseUsecase, businessUC)
+	expenseController := controllers.NewExpenseController(expenseUsecase, businessUC, logger)
+	inventoryController := controllers.NewInventoryController(inventoryUC, businessUC)
+	salesController := controllers.NewSalesController(salesUC, businessUC)
+	transactionController := controllers.NewTransactionController(transactionUsecase, businessUC, logger)
+	profitController := controllers.NewProfitController(profitUC, businessUC)
+	restoreController := controllers.NewRestoreController(restoreUC, businessUC)
+	reportController := controllers.NewReportController(reportUC, businessUC)
+	exportController := controllers.NewExportController(exportUC, businessUC)
+	syncController := controllers.NewSyncController(syncUsecase, businessUC)
 
 	// Router
-	r := routers.SetupRouter(authController, userController, businessController, jwtService, expenseController)
+	r := routers.SetupRouter(
+		authController,
+		userController,
+		businessController,
+		jwtService,
+		expenseController,
+		inventoryController,
+		salesController,
+		transactionController,
+		profitController,
+		restoreController,
+		reportController,
+		exportController,
+		syncController,
+		logger,
+	)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on port %s", port)
+	logger.Info("APP", "Server starting on port %s", port)
 	if err := r.Run(":" + port); err != nil {
-		log.Fatal("Failed to start server:", err)
+		logger.Fatal("APP", "Failed to start server: %v", err)
 	}
 }

@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 	domain "shop-ops/Domain"
+	infrastructure "shop-ops/Infrastructure"
 	usecases "shop-ops/Usecases"
 	"strconv"
 	"time"
@@ -16,29 +16,30 @@ import (
 type ExpenseController struct {
 	expenseUseCases  *usecases.ExpenseUseCases
 	businessUseCases usecases.BusinessUseCases
+	logger           *infrastructure.Logger
 }
 
 type RecordExpenseRequest struct {
-	BusinessID string  `json:"businessId" binding:"required"`
+	BusinessID string  `json:"business_id" binding:"required"`
 	Category   string  `json:"category" binding:"required"`
 	Amount     float64 `json:"amount" binding:"required,min=0.01"`
 	Note       string  `json:"note"`
 }
 
 type UpdateExpenseRequest struct {
-	Category string  `json:"category"`
-	Amount   float64 `json:"amount" binding:"omitempty,min=0.01"`
-	Note     string  `json:"note"`
+	Category *string  `json:"category"`
+	Amount   *float64 `json:"amount" binding:"omitempty,min=0.01"`
+	Note     *string  `json:"note"`
 }
 
 type ExpenseResponse struct {
 	ID         string          `json:"id"`
-	BusinessID string          `json:"businessId"`
+	BusinessID string          `json:"business_id"`
 	Category   string          `json:"category"`
 	Amount     decimal.Decimal `json:"amount"`
 	Note       string          `json:"note"`
-	CreatedAt  time.Time       `json:"createdAt"`
-	IsVoided   bool            `json:"isVoided"`
+	CreatedAt  time.Time       `json:"created_at"`
+	IsVoided   bool            `json:"is_voided"`
 }
 
 type SummaryResponse struct {
@@ -62,14 +63,16 @@ type PaginatedResponse struct {
 	Pagination PaginationInfo    `json:"pagination"`
 }
 
-// NewExpenseController 
+// NewExpenseController
 func NewExpenseController(
 	expenseUseCases *usecases.ExpenseUseCases,
 	businessUseCases usecases.BusinessUseCases,
+	logger *infrastructure.Logger,
 ) *ExpenseController {
 	return &ExpenseController{
 		expenseUseCases:  expenseUseCases,
 		businessUseCases: businessUseCases,
+		logger:           logger,
 	}
 }
 
@@ -77,19 +80,18 @@ func NewExpenseController(
 func (ctrl *ExpenseController) RecordExpense(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
-		log.Println("❌ User ID not found in context")
+		ctrl.logger.Warn("EXPENSE", "User ID not found in context")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "User not authenticated",
 			"code":  "AUTH_001",
 		})
 		return
 	}
-	log.Printf("👤 User authenticated: %s", userID)
-
+	ctrl.logger.Debug("EXPENSE", "User authenticated: %s", userID)
 
 	var req RecordExpenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("❌ Invalid request body: %v", err)
+		ctrl.logger.Warn("EXPENSE", "Invalid request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Invalid request body",
 			"details": err.Error(),
@@ -97,12 +99,11 @@ func (ctrl *ExpenseController) RecordExpense(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("📝 Request body: %+v", req)
-
+	ctrl.logger.Debug("EXPENSE", "Request body: %+v", req)
 
 	businessID, err := primitive.ObjectIDFromHex(req.BusinessID)
 	if err != nil {
-		log.Printf("❌ Invalid business ID format: %s", req.BusinessID)
+		ctrl.logger.Warn("EXPENSE", "Invalid business ID format: %s", req.BusinessID)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid business ID format",
 			"code":  "VAL_002",
@@ -112,7 +113,7 @@ func (ctrl *ExpenseController) RecordExpense(c *gin.Context) {
 
 	business, err := ctrl.businessUseCases.GetById(req.BusinessID)
 	if err != nil {
-		log.Printf("❌ Business not found: %v", err)
+		ctrl.logger.Warn("EXPENSE", "Business not found: %v", err)
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Business not found",
 			"code":  "BIZ_001",
@@ -121,14 +122,14 @@ func (ctrl *ExpenseController) RecordExpense(c *gin.Context) {
 	}
 
 	if business.UserID.Hex() != userID {
-		log.Printf("❌ User %s is not owner of business %s", userID, req.BusinessID)
+		ctrl.logger.Warn("EXPENSE", "User %s is not owner of business %s", userID, req.BusinessID)
 		c.JSON(http.StatusForbidden, gin.H{
 			"error": "You don't have permission to create expenses for this business",
 			"code":  "AUTH_003",
 		})
 		return
 	}
-	log.Printf("✅ User %s is owner of business %s", userID, req.BusinessID)
+	ctrl.logger.Debug("EXPENSE", "User %s is owner of business %s", userID, req.BusinessID)
 
 	amount := decimal.NewFromFloat(req.Amount)
 
@@ -140,7 +141,7 @@ func (ctrl *ExpenseController) RecordExpense(c *gin.Context) {
 	})
 
 	if err != nil {
-		log.Printf("❌ Error creating expense: %v", err)
+		ctrl.logger.Error("EXPENSE", "Error creating expense: %v", err)
 		switch err {
 		case domain.ErrInvalidCategory:
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -161,7 +162,7 @@ func (ctrl *ExpenseController) RecordExpense(c *gin.Context) {
 		return
 	}
 
-	log.Printf("✅ Expense created successfully with ID: %s", expense.ID.Hex())
+	ctrl.logger.Info("EXPENSE", "Expense created successfully with ID: %s", expense.ID.Hex())
 	c.JSON(http.StatusCreated, toExpenseResponse(expense))
 }
 
@@ -294,7 +295,7 @@ func (ctrl *ExpenseController) GetExpenses(c *gin.Context) {
 
 // GetExpenseById - GET /expenses/:expenseId
 func (ctrl *ExpenseController) GetExpenseById(c *gin.Context) {
-	
+
 	userID := c.GetString("user_id")
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, ErrorResponse{
@@ -303,7 +304,6 @@ func (ctrl *ExpenseController) GetExpenseById(c *gin.Context) {
 		})
 		return
 	}
-
 
 	expenseID := c.Param("expenseId")
 	if expenseID == "" {
@@ -430,18 +430,54 @@ func (ctrl *ExpenseController) UpdateExpense(c *gin.Context) {
 		return
 	}
 
-	if expense.IsVoided {
-		c.JSON(http.StatusConflict, ErrorResponse{
-			Code:    "EXP_001",
-			Message: "Cannot update a voided expense",
+	// Map controller request to usecase request
+	useCaseReq := usecases.UpdateExpenseRequest{}
+
+	if req.Category != nil {
+		cat := domain.ExpenseCategory(*req.Category)
+		useCaseReq.Category = &cat
+	}
+
+	if req.Amount != nil {
+		amt := decimal.NewFromFloat(*req.Amount)
+		useCaseReq.Amount = &amt
+	}
+
+	if req.Note != nil {
+		useCaseReq.Note = req.Note
+	}
+
+	updatedExpense, err := ctrl.expenseUseCases.UpdateExpense(expenseObjID, useCaseReq)
+	if err != nil {
+		if err == domain.ErrCannotUpdateVoided {
+			c.JSON(http.StatusConflict, ErrorResponse{
+				Code:    "EXP_001",
+				Message: "Cannot update a voided expense",
+			})
+			return
+		}
+		if err == domain.ErrInvalidCategory {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    "VAL_003",
+				Message: "Invalid expense category",
+			})
+			return
+		}
+		if err == domain.ErrNegativeAmount {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Code:    "VAL_004",
+				Message: "Amount must be positive",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Code:    "SYS_001",
+			Message: "Failed to update expense",
 		})
 		return
 	}
 
-	c.JSON(http.StatusNotImplemented, ErrorResponse{
-		Code:    "SYS_002",
-		Message: "Update functionality not yet implemented",
-	})
+	c.JSON(http.StatusOK, toExpenseResponse(updatedExpense))
 }
 
 // VoidExpense - DELETE /expenses/:expenseId
@@ -584,6 +620,7 @@ func (ctrl *ExpenseController) GetSummary(c *gin.Context) {
 
 	summary, err := ctrl.expenseUseCases.GetExpensesByCategory(businessObjID, dateRange)
 	if err != nil {
+		ctrl.logger.Error("EXPENSE", "Failed to fetch expense summary: %v", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Code:    "SYS_001",
 			Message: "Failed to fetch summary",
