@@ -3,7 +3,9 @@ package routers
 import (
 	"shop-ops/Delivery/controllers"
 	infrastructure "shop-ops/Infrastructure"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,6 +28,16 @@ func SetupRouter(
 	r := gin.New()
 	r.Use(infrastructure.RequestLogger(logger))
 	r.Use(gin.Recovery())
+
+	// CORS configuration
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", "http://localhost:5173"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Health check (public, sans version)
 	r.GET("/ping", func(c *gin.Context) {
