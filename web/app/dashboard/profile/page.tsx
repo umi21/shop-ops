@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import PageTitle from "@/app/components/ui/PageTitle";
 import Card from "@/app/components/ui/Card";
 import {
@@ -9,9 +9,6 @@ import {
   Building2,
   Clock3,
   KeyRound,
-  Mail,
-  MapPin,
-  Phone,
   ShieldCheck,
   User,
 } from "lucide-react";
@@ -36,6 +33,78 @@ type ActivityItem = {
   title: string;
   description: string;
   timestamp: string;
+};
+
+type ApiUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type ApiError = {
+  error?: string;
+  details?: string;
+};
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
+
+const ACCESS_TOKEN_KEYS = ["token", "access_token", "authToken"];
+
+const getAccessToken = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  for (const key of ACCESS_TOKEN_KEYS) {
+    const value = window.localStorage.getItem(key);
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+};
+
+const parseApiError = async (response: Response) => {
+  let body: ApiError | null = null;
+
+  try {
+    body = (await response.json()) as ApiError;
+  } catch {
+    body = null;
+  }
+
+  return body?.error || body?.details || `Request failed (${response.status})`;
+};
+
+const requestWithAuth = async <T,>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> => {
+  const token = getAccessToken();
+
+  if (!token) {
+    throw new Error("No auth token found. Please sign in again.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(init.headers ?? {}),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseApiError(response));
+  }
+
+  return (await response.json()) as T;
 };
 
 const defaultProfile: ProfileDetails = {
@@ -77,9 +146,28 @@ const recentActivity: ActivityItem[] = [
 const inputClassName =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100";
 
+const mapApiUserToProfile = (user: ApiUser, current: ProfileDetails): ProfileDetails => ({
+  ...current,
+  fullName: user.name || current.fullName,
+  email: user.email || "",
+  phone: user.phone || "",
+});
+
 export default function ProfilePage() {
   const [savedProfile, setSavedProfile] = useState<ProfileDetails>(defaultProfile);
   const [draftProfile, setDraftProfile] = useState<ProfileDetails>(defaultProfile);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
   const [isEditing, setIsEditing] = useState(false);
 
   const activeProfile = isEditing ? draftProfile : savedProfile;
@@ -101,24 +189,146 @@ export default function ProfilePage() {
   };
 
   const handleStartEdit = () => {
+    setProfileError(null);
+    setProfileSuccess(null);
     setDraftProfile(savedProfile);
     setIsEditing(true);
   };
 
   const handleCancel = () => {
+    setProfileError(null);
+    setProfileSuccess(null);
     setDraftProfile(savedProfile);
     setIsEditing(false);
   };
 
-  const handleSave = () => {
-    setSavedProfile(draftProfile);
-    setIsEditing(false);
+  const fetchProfile = async () => {
+    setIsLoadingProfile(true);
+    setProfileError(null);
+
+    try {
+      const user = await requestWithAuth<ApiUser>("/users/me", {
+        method: "GET",
+      });
+
+      const mapped = mapApiUserToProfile(user, defaultProfile);
+      setSavedProfile(mapped);
+      setDraftProfile(mapped);
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Failed to load profile");
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    setIsSavingProfile(true);
+    setProfileError(null);
+    setProfileSuccess(null);
+
+    try {
+      let nextProfile = { ...savedProfile };
+
+      const nameChanged = draftProfile.fullName.trim() !== savedProfile.fullName.trim();
+      const emailChanged = draftProfile.email.trim() !== savedProfile.email.trim();
+      const phoneChanged = draftProfile.phone.trim() !== savedProfile.phone.trim();
+
+      if (nameChanged || emailChanged) {
+        const updatedUser = await requestWithAuth<ApiUser>("/users/me", {
+          method: "PATCH",
+          body: JSON.stringify({
+            name: draftProfile.fullName.trim(),
+            email: draftProfile.email.trim(),
+          }),
+        });
+
+        nextProfile = mapApiUserToProfile(updatedUser, nextProfile);
+      }
+
+      if (phoneChanged) {
+        const updatedPhoneResponse = await requestWithAuth<Partial<ApiUser>>("/users/me/phone", {
+          method: "PUT",
+          body: JSON.stringify({
+            phone: draftProfile.phone.trim(),
+          }),
+        });
+
+        if (updatedPhoneResponse.phone || updatedPhoneResponse.name || updatedPhoneResponse.email) {
+          nextProfile = mapApiUserToProfile(updatedPhoneResponse as ApiUser, {
+            ...nextProfile,
+            phone: draftProfile.phone.trim(),
+          });
+        } else {
+          nextProfile = {
+            ...nextProfile,
+            phone: draftProfile.phone.trim(),
+          };
+        }
+      }
+
+      if (!nameChanged && !emailChanged && !phoneChanged) {
+        setProfileSuccess("No changes to save.");
+        setIsEditing(false);
+        return;
+      }
+
+      setSavedProfile(nextProfile);
+      setDraftProfile(nextProfile);
+      setIsEditing(false);
+      setProfileSuccess("Profile updated successfully.");
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Failed to update profile");
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleResetDefaults = () => {
-    setSavedProfile(defaultProfile);
-    setDraftProfile(defaultProfile);
+    setProfileSuccess(null);
+    setProfileError(null);
+    fetchProfile();
     setIsEditing(false);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("Please fill all password fields.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+
+    setIsSavingPassword(true);
+
+    try {
+      await requestWithAuth<unknown>("/users/me/password", {
+        method: "PUT",
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      });
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordSuccess("Password updated successfully.");
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : "Failed to update password");
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   return (
@@ -183,9 +393,10 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleSave}
+                  disabled={isSavingProfile}
                   className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 sm:w-auto"
                 >
-                  Save changes
+                  {isSavingProfile ? "Saving..." : "Save changes"}
                 </button>
               </>
             ) : (
@@ -200,15 +411,32 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={handleResetDefaults}
+              disabled={isLoadingProfile}
               className="w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 sm:w-auto"
             >
-              Reset defaults
+              Reload profile
             </button>
           </div>
         </div>
 
         <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-2">
           <section className="space-y-4">
+            {isLoadingProfile && (
+              <p className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                Loading profile...
+              </p>
+            )}
+            {profileError && (
+              <p className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {profileError}
+              </p>
+            )}
+            {profileSuccess && (
+              <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                {profileSuccess}
+              </p>
+            )}
+
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Personal Details
             </h3>
@@ -396,6 +624,69 @@ export default function ProfilePage() {
       </div>
 
       <div className="flex flex-col w-full">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Security
+          </h3>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="block space-y-1 sm:col-span-2">
+              <span className="text-xs font-medium text-slate-500">Current Password</span>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                className={inputClassName}
+                placeholder="Enter current password"
+              />
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-slate-500">New Password</span>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                className={inputClassName}
+                placeholder="Enter new password"
+              />
+            </label>
+
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-slate-500">Confirm Password</span>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                className={inputClassName}
+                placeholder="Confirm new password"
+              />
+            </label>
+          </div>
+
+          {passwordError && (
+            <p className="mt-3 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              {passwordError}
+            </p>
+          )}
+
+          {passwordSuccess && (
+            <p className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              {passwordSuccess}
+            </p>
+          )}
+
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={handleChangePassword}
+              disabled={isSavingPassword}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSavingPassword ? "Updating..." : "Update password"}
+            </button>
+          </div>
+        </div>
 
 
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
