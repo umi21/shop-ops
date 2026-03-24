@@ -15,12 +15,12 @@ Documentation for UI developers on how to use the domain layer use cases.
 
 ### Login Use Case
 
-**Description:** Authenticates a user with email and password.
+**Description:** Authenticates a user with phone number and password.
 
 **Parameters:**
 | Param | Type | Required | Description |
 |-------|------|----------|-------------|
-| `email` | `String` | Yes | User's email address |
+| `phone` | `String` | Yes | User's phone number |
 | `password` | `String` | Yes | User's password |
 
 **Returns:** `Either<Failure, User>`
@@ -32,7 +32,7 @@ Documentation for UI developers on how to use the domain layer use cases.
 **Usage Example:**
 ```dart
 final result = await loginUseCase(const LoginParams(
-  email: 'user@example.com',
+  phone: '+1234567890',
   password: 'password123',
 ));
 

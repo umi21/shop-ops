@@ -17,7 +17,7 @@ void main() {
     useCase = LoginUseCase(mockRepository);
   });
 
-  const tEmail = 'test@example.com';
+  const tPhone = '+1234567890';
   const tPassword = 'password123';
   final tUser = User(
     id: '1',
@@ -31,40 +31,40 @@ void main() {
   group('LoginUseCase', () {
     test('should return user when login is successful', () async {
       when(
-        () => mockRepository.login(tEmail, tPassword),
+        () => mockRepository.login(tPhone, tPassword),
       ).thenAnswer((_) async => Right(tUser));
 
       final result = await useCase(
-        const LoginParams(email: tEmail, password: tPassword),
+        const LoginParams(phone: tPhone, password: tPassword),
       );
 
       expect(result, Right(tUser));
-      verify(() => mockRepository.login(tEmail, tPassword)).called(1);
+      verify(() => mockRepository.login(tPhone, tPassword)).called(1);
       verifyNoMoreInteractions(mockRepository);
     });
 
     test('should return ServerFailure when server error occurs', () async {
       const failure = ServerFailure('Invalid credentials', statusCode: 401);
       when(
-        () => mockRepository.login(tEmail, tPassword),
+        () => mockRepository.login(tPhone, tPassword),
       ).thenAnswer((_) async => const Left(failure));
 
       final result = await useCase(
-        const LoginParams(email: tEmail, password: tPassword),
+        const LoginParams(phone: tPhone, password: tPassword),
       );
 
       expect(result, const Left(failure));
-      verify(() => mockRepository.login(tEmail, tPassword)).called(1);
+      verify(() => mockRepository.login(tPhone, tPassword)).called(1);
     });
 
     test('should return NetworkFailure when no internet', () async {
       const failure = NetworkFailure('No internet connection');
       when(
-        () => mockRepository.login(tEmail, tPassword),
+        () => mockRepository.login(tPhone, tPassword),
       ).thenAnswer((_) async => const Left(failure));
 
       final result = await useCase(
-        const LoginParams(email: tEmail, password: tPassword),
+        const LoginParams(phone: tPhone, password: tPassword),
       );
 
       expect(result, const Left(failure));

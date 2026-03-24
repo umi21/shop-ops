@@ -3,7 +3,7 @@ import 'package:mobile/core/resources/api_constants.dart';
 import 'package:mobile/features/auth/data/models/mappers/user_mapper.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<Map<String, dynamic>> login(String email, String password);
+  Future<Map<String, dynamic>> login(String phone, String password);
   Future<Map<String, dynamic>> register({
     required String email,
     required String password,
@@ -25,10 +25,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this.apiClient);
 
   @override
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String phone, String password) async {
     final response = await apiClient.post(
       ApiConstants.loginEndpoint,
-      data: {'email': email, 'password': password},
+      data: {'phone': phone, 'password': password},
     );
     return response.data as Map<String, dynamic>;
   }

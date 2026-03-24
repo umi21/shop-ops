@@ -3,7 +3,7 @@ import 'package:mobile/core/error/failures.dart';
 import 'package:mobile/features/auth/domain/entities/user.dart';
 
 abstract class AuthRepository {
-  Future<Either<Failure, User>> login(String email, String password);
+  Future<Either<Failure, User>> login(String phone, String password);
   Future<Either<Failure, User>> register({
     required String email,
     required String password,

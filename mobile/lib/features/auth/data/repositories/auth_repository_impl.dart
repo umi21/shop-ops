@@ -20,15 +20,15 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
-  Future<Either<Failure, User>> login(String email, String password) async {
+  Future<Either<Failure, User>> login(String phone, String password) async {
     try {
       final localUser = await localDataSource.getUser();
 
-      if (localUser != null && localUser.email == email) {
+      if (localUser != null && localUser.phone == phone) {
         return Right(UserMapper.toEntity(localUser));
       }
 
-      final response = await remoteDataSource.login(email, password);
+      final response = await remoteDataSource.login(phone, password);
       final userModel = UserMapper.fromJson(response['user']);
       await localDataSource.saveUser(userModel);
       return Right(UserMapper.toEntity(userModel));
