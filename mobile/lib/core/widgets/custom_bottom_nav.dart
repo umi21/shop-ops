@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/dashboard/presentation/pages/dashboard_screen.dart';
-import '../../features/sales/presentation/sales_screen.dart';
+import '../../features/sales/presentation/Pages/sales_screen.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/expense/presentation/pages/expense_page.dart';
 import '../../features/settings/presentation/settings.dart';

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/routes/app_routes.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/expandable_fab.dart';
-import '../../../models/sales.dart';
+import '../models/sale_ui_model.dart';
+import '../../domain/entities/sales.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -13,83 +14,105 @@ class SalesScreen extends StatefulWidget {
 
 class _SalesScreenState extends State<SalesScreen> {
   int _selectedTab = 0;
-  bool _avatarPressed = false; // added
+  bool _avatarPressed = false;
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
   static const primary = Color(0xFF1765FF);
 
-  final List<SaleGroup> _allGroups = [
-    SaleGroup(
-      label:  'TODAY, ${DateFormat('MMM d').format(DateTime.now()).toUpperCase()}',
+  final List<SaleGroupUiModel> _allGroups = [
+    SaleGroupUiModel(
+      label: 'TODAY, ${DateFormat('MMM d').format(DateTime.now()).toUpperCase()}',
       total: 245.50,
       sales: [
-        Sale(
+        SaleUiModel(
+          sale: Sale(
+            id: '1',
+            productName: 'Organic Coffee Bean',
+            amount: 18.00,
+            quantity: 2,
+            timestamp: DateTime.now(),
+            businessId: 'biz_001',
+          ),
           icon: Icons.coffee,
-          iconBg: Color(0xFFEEF3FF),
+          iconBg: const Color(0xFFEEF3FF),
           iconColor: primary,
-          title: 'Organic Coffee Bean',
-          subtitle: '2 units • 09:45 AM',
-          amount: 36.00,
-          isReturn: false,
         ),
-        Sale(
+        SaleUiModel(
+          sale: Sale(
+            id: '2',
+            productName: 'Paper Filters (100pk)',
+            amount: 3.10,
+            quantity: 5,
+            timestamp: DateTime.now(),
+            businessId: 'biz_001',
+          ),
           icon: Icons.description_outlined,
-          iconBg: Color(0xFFEEF3FF),
+          iconBg: const Color(0xFFEEF3FF),
           iconColor: primary,
-          title: 'Paper Filters (100pk)',
-          subtitle: '5 units • 10:12 AM',
-          amount: 15.50,
-          isReturn: false,
         ),
-        Sale(
+        SaleUiModel(
+          sale: Sale(
+            id: '3',
+            productName: 'Artisan Croissant',
+            amount: 4.50,
+            quantity: 12,
+            timestamp: DateTime.now(),
+            businessId: 'biz_001',
+          ),
           icon: Icons.restaurant,
-          iconBg: Color(0xFFEEF3FF),
+          iconBg: const Color(0xFFEEF3FF),
           iconColor: primary,
-          title: 'Artisan Croissant',
-          subtitle: '12 units • 11:30 AM',
-          amount: 54.00,
-          isReturn: false,
         ),
       ],
     ),
-    SaleGroup(
-      label: 'YESTERDAY, OCT 23',
+    SaleGroupUiModel(
+      label: 'YESTERDAY, ${DateFormat('MMM d').format(DateTime.now().subtract(const Duration(days: 1))).toUpperCase()}',
       total: 890.00,
       sales: [
-        Sale(
+        SaleUiModel(
+          sale: Sale(
+            id: '4',
+            productName: 'Bulk Espresso Blend',
+            amount: 14.00,
+            quantity: 10,
+            timestamp: DateTime.now().subtract(const Duration(days: 1)),
+            businessId: 'biz_001',
+          ),
           icon: Icons.inventory_2_outlined,
-          iconBg: Color(0xFFEEF3FF),
+          iconBg: const Color(0xFFEEF3FF),
           iconColor: primary,
-          title: 'Bulk Espresso Blend',
-          subtitle: '10 units • 04:20 PM',
-          amount: 140.00,
-          isReturn: false,
         ),
-        Sale(
+        SaleUiModel(
+          sale: Sale(
+            id: '5',
+            productName: 'Return: Ceramic Mug',
+            amount: 12.00,
+            quantity: 1,
+            timestamp: DateTime.now().subtract(const Duration(days: 1)),
+            businessId: 'biz_001',
+            isVoided: true,
+          ),
           icon: Icons.replay,
-          iconBg: Color(0xFFFFEEEE),
+          iconBg: const Color(0xFFFFEEEE),
           iconColor: Colors.red,
-          title: 'Return: Ceramic Mug',
-          subtitle: '1 unit • 02:15 PM',
-          amount: -12.00,
-          isReturn: true,
         ),
       ],
     ),
   ];
 
-  List<SaleGroup> get _filteredGroups {
+  List<SaleGroupUiModel> get _filteredGroups {
     if (_searchQuery.isEmpty) return _allGroups;
     return _allGroups
         .map((g) {
           final filteredSales = g.sales
               .where(
-                (s) =>
-                    s.title.toLowerCase().contains(_searchQuery.toLowerCase()),
+                (s) => s.title
+                    .toLowerCase()
+                    .contains(_searchQuery.toLowerCase()),
               )
               .toList();
-          return SaleGroup(
+          return SaleGroupUiModel(
             label: g.label,
             total: g.total,
             sales: filteredSales,
@@ -119,11 +142,14 @@ class _SalesScreenState extends State<SalesScreen> {
                 children: [
                   const Text(
                     'Sales History',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1E293B),
+                    ),
                   ),
                   Row(
                     children: [
-                      // added GestureDetector + AnimatedScale
                       GestureDetector(
                         onTapDown: (_) =>
                             setState(() => _avatarPressed = true),
@@ -158,7 +184,7 @@ class _SalesScreenState extends State<SalesScreen> {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _SummaryCard(),
+              child: const _SummaryCard(),
             ),
 
             const SizedBox(height: 18),
@@ -299,10 +325,10 @@ class _SummaryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
+              const Row(
                 children: [
                   _StatChip(label: 'TRANSACTIONS', value: '420'),
-                  const SizedBox(width: 32),
+                  SizedBox(width: 32),
                   _StatChip(label: 'AVERAGE SALE', value: r'$33.95'),
                 ],
               ),
@@ -429,7 +455,7 @@ class _GroupHeader extends StatelessWidget {
 }
 
 class _GroupCard extends StatelessWidget {
-  final List<Sale> sales;
+  final List<SaleUiModel> sales;
 
   const _GroupCard({required this.sales});
 
@@ -469,13 +495,14 @@ class _GroupCard extends StatelessWidget {
 }
 
 class _SaleTile extends StatelessWidget {
-  final Sale sale;
+  final SaleUiModel sale;
 
   const _SaleTile({required this.sale});
 
   @override
   Widget build(BuildContext context) {
-    final amountColor = sale.isReturn ? Colors.red : const Color(0xFF1765FF);
+    final amountColor =
+        sale.isReturn ? Colors.red : const Color(0xFF1765FF);
     final amountText = sale.isReturn
         ? '-\$${sale.amount.abs().toStringAsFixed(2)}'
         : '+\$${sale.amount.toStringAsFixed(2)}';
