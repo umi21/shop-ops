@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import '../../../sales/presentation/Pages/sales_screen.dart';
 import '../../../inventory/presentation/pages/inventory_page.dart';
-import '../../../expense/presentation/pages/expense_page.dart';
+import '../../../expenses/presentation/pages/expense_page.dart';
 import '../../../../core/widgets/custom_bottom_nav.dart';
 import '../../../settings/presentation/settings.dart';  
 // future: reports 
