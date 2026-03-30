@@ -1,6 +1,6 @@
 import 'package:mobile/core/network/api_client.dart';
 import 'package:mobile/core/resources/api_constants.dart';
-import 'package:mobile/features/auth/data/models/mappers/user_mapper.dart';
+//import 'package:mobile/features/auth/data/models/mappers/user_mapper.dart';
 
 abstract class AuthRemoteDataSource {
   Future<Map<String, dynamic>> login(String phone, String password);
