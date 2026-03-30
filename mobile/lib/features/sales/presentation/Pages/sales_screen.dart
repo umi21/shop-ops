@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/injection_container.dart' as di;
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/expandable_fab.dart';
-import '../Models/sale_ui_model.dart';
-import '../../domain/entities/sales.dart';
+import '../../domain/entities/sale.dart';
+import '../manager/bloc/sales_bloc.dart';
+import '../manager/bloc/sales_event.dart';
+import '../manager/bloc/sales_state.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -13,114 +16,11 @@ class SalesScreen extends StatefulWidget {
 }
 
 class _SalesScreenState extends State<SalesScreen> {
-  int _selectedTab = 0;
   bool _avatarPressed = false;
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
   static const primary = Color(0xFF1765FF);
-
-  final List<SaleGroupUiModel> _allGroups = [
-    SaleGroupUiModel(
-      label: 'TODAY, ${DateFormat('MMM d').format(DateTime.now()).toUpperCase()}',
-      total: 245.50,
-      sales: [
-        SaleUiModel(
-          sale: Sale(
-            id: '1',
-            productName: 'Organic Coffee Bean',
-            amount: 18.00,
-            quantity: 2,
-            timestamp: DateTime.now(),
-            businessId: 'biz_001',
-          ),
-          icon: Icons.coffee,
-          iconBg: const Color(0xFFEEF3FF),
-          iconColor: primary,
-        ),
-        SaleUiModel(
-          sale: Sale(
-            id: '2',
-            productName: 'Paper Filters (100pk)',
-            amount: 3.10,
-            quantity: 5,
-            timestamp: DateTime.now(),
-            businessId: 'biz_001',
-          ),
-          icon: Icons.description_outlined,
-          iconBg: const Color(0xFFEEF3FF),
-          iconColor: primary,
-        ),
-        SaleUiModel(
-          sale: Sale(
-            id: '3',
-            productName: 'Artisan Croissant',
-            amount: 4.50,
-            quantity: 12,
-            timestamp: DateTime.now(),
-            businessId: 'biz_001',
-          ),
-          icon: Icons.restaurant,
-          iconBg: const Color(0xFFEEF3FF),
-          iconColor: primary,
-        ),
-      ],
-    ),
-    SaleGroupUiModel(
-      label: 'YESTERDAY, ${DateFormat('MMM d').format(DateTime.now().subtract(const Duration(days: 1))).toUpperCase()}',
-      total: 890.00,
-      sales: [
-        SaleUiModel(
-          sale: Sale(
-            id: '4',
-            productName: 'Bulk Espresso Blend',
-            amount: 14.00,
-            quantity: 10,
-            timestamp: DateTime.now().subtract(const Duration(days: 1)),
-            businessId: 'biz_001',
-          ),
-          icon: Icons.inventory_2_outlined,
-          iconBg: const Color(0xFFEEF3FF),
-          iconColor: primary,
-        ),
-        SaleUiModel(
-          sale: Sale(
-            id: '5',
-            productName: 'Return: Ceramic Mug',
-            amount: 12.00,
-            quantity: 1,
-            timestamp: DateTime.now().subtract(const Duration(days: 1)),
-            businessId: 'biz_001',
-            isVoided: true,
-          ),
-          icon: Icons.replay,
-          iconBg: const Color(0xFFFFEEEE),
-          iconColor: Colors.red,
-        ),
-      ],
-    ),
-  ];
-
-  List<SaleGroupUiModel> get _filteredGroups {
-    if (_searchQuery.isEmpty) return _allGroups;
-    return _allGroups
-        .map((g) {
-          final filteredSales = g.sales
-              .where(
-                (s) => s.title
-                    .toLowerCase()
-                    .contains(_searchQuery.toLowerCase()),
-              )
-              .toList();
-          return SaleGroupUiModel(
-            label: g.label,
-            total: g.total,
-            sales: filteredSales,
-          );
-        })
-        .where((g) => g.sales.isNotEmpty)
-        .toList();
-  }
 
   @override
   void dispose() {
@@ -130,148 +30,273 @@ class _SalesScreenState extends State<SalesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return BlocProvider(
+      create: (context) => SalesBloc(
+        getSalesUseCase: di.sl(),
+        addSaleUseCase: di.sl(),
+        voidSaleUseCase: di.sl(),
+      )..add(LoadSalesEvent('default_business_id')),
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            backgroundColor: Colors.grey[50],
+            body: SafeArea(
+              child: Column(
                 children: [
-                  const Text(
-                    'Sales History',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF1E293B),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Sales History',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTapDown: (_) =>
+                                  setState(() => _avatarPressed = true),
+                              onTapUp: (_) {
+                                setState(() => _avatarPressed = false);
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.profileRoute,
+                                );
+                              },
+                              onTapCancel: () =>
+                                  setState(() => _avatarPressed = false),
+                              child: AnimatedScale(
+                                scale: _avatarPressed ? 0.88 : 1.0,
+                                duration: const Duration(milliseconds: 100),
+                                child: const CircleAvatar(
+                                  backgroundColor: Color(0xFFE2E8F0),
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTapDown: (_) =>
-                            setState(() => _avatarPressed = true),
-                        onTapUp: (_) {
-                          setState(() => _avatarPressed = false);
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.profileRoute,
+
+                  const SizedBox(height: 16),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: BlocBuilder<SalesBloc, SalesState>(
+                      builder: (context, state) {
+                        if (state is SalesLoadedState) {
+                          return _SummaryCard(
+                            totalRevenue: state.totalRevenue,
+                            transactionCount: state.transactionCount,
+                            averageSale: state.averageSale,
                           );
-                        },
-                        onTapCancel: () =>
-                            setState(() => _avatarPressed = false),
-                        child: AnimatedScale(
-                          scale: _avatarPressed ? 0.88 : 1.0,
-                          duration: const Duration(milliseconds: 100),
-                          child: const CircleAvatar(
-                            backgroundColor: Color(0xFFE2E8F0),
-                            child: Icon(
-                              Icons.person,
-                              color: Color(0xFF475569),
-                            ),
+                        }
+                        return const _SummaryCard(
+                          totalRevenue: 0,
+                          transactionCount: 0,
+                          averageSale: 0,
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: BlocBuilder<SalesBloc, SalesState>(
+                      builder: (context, state) {
+                        int selectedIndex = 0;
+                        if (state is SalesLoadedState) {
+                          switch (state.selectedPeriod) {
+                            case 'Weekly':
+                              selectedIndex = 1;
+                              break;
+                            case 'Monthly':
+                              selectedIndex = 2;
+                              break;
+                            default:
+                              selectedIndex = 0;
+                          }
+                        }
+                        return _TabRow(
+                          selected: selectedIndex,
+                          onTap: (i) {
+                            final period = ['Daily', 'Weekly', 'Monthly'][i];
+                            context.read<SalesBloc>().add(
+                              ChangeSalesPeriodEvent(period),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (v) {
+                        setState(() => _searchQuery = v);
+                        context.read<SalesBloc>().add(SearchSalesEvent(v));
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search product or ID...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey[400],
+                          size: 20,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: primary,
+                            width: 1.5,
                           ),
                         ),
                       ),
-                    ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: BlocBuilder<SalesBloc, SalesState>(
+                      builder: (context, state) {
+                        if (state is SalesLoadingState) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (state is SalesLoadedState) {
+                          if (state.groupedSales.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.receipt_long_outlined,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No sales for this period',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return ListView(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            children: [
+                              for (final entry
+                                  in state.groupedSales.entries) ...[
+                                _GroupHeader(
+                                  label: entry.key.toUpperCase(),
+                                  total: entry.value.fold(
+                                    0.0,
+                                    (sum, s) => sum + s.total,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                _GroupCard(
+                                  sales: entry.value,
+                                  onVoid: (saleId) {
+                                    context.read<SalesBloc>().add(
+                                      VoidSaleEvent(saleId),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 18),
+                              ],
+                            ],
+                          );
+                        }
+
+                        if (state is SalesErrorState) {
+                          return Center(
+                            child: Text(
+                              'Error: ${state.message}',
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          );
+                        }
+
+                        return const SizedBox();
+                      },
+                    ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: const _SummaryCard(),
-            ),
-
-            const SizedBox(height: 18),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _TabRow(
-                selected: _selectedTab,
-                onTap: (i) => setState(() => _selectedTab = i),
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'Search product or ID...',
-                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: Colors.grey[400],
-                    size: 20,
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: primary, width: 1.5),
-                  ),
+            floatingActionButton: Padding(
+              padding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
+              child: ExpandableFab(
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: 'Add Sale',
+                backgroundColor: primary,
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => const _QuickAddSaleSheet(),
                 ),
               ),
             ),
-
-            const SizedBox(height: 12),
-
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  for (final group in _filteredGroups) ...[
-                    _GroupHeader(label: group.label, total: group.total),
-                    const SizedBox(height: 8),
-                    _GroupCard(sales: group.sales),
-                    const SizedBox(height: 18),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
+            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          );
+        },
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(right: 20.0, bottom: 20.0),
-        child: ExpandableFab(
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: 'Add Sale',
-          backgroundColor: primary,
-          onTap: () => showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) => const _QuickAddSaleSheet(),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
 
 class _SummaryCard extends StatelessWidget {
-  static const primary = Color(0xFF1765FF);
+  final double totalRevenue;
+  final int transactionCount;
+  final double averageSale;
 
-  const _SummaryCard();
+  const _SummaryCard({
+    required this.totalRevenue,
+    required this.transactionCount,
+    required this.averageSale,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +312,7 @@ class _SummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(0.35),
+            color: const Color(0xFF1765FF).withAlpha(89),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -301,7 +326,7 @@ class _SummaryCard extends StatelessWidget {
             child: Icon(
               Icons.trending_up,
               size: 100,
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withAlpha(20),
             ),
           ),
           Column(
@@ -310,14 +335,14 @@ class _SummaryCard extends StatelessWidget {
               Text(
                 'Total Revenue',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withAlpha(217),
                   fontSize: 13,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                r'$69,420.67',
-                style: TextStyle(
+              Text(
+                '\$${totalRevenue.toStringAsFixed(2)}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
@@ -325,11 +350,14 @@ class _SummaryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Row(
+              Row(
                 children: [
-                  _StatChip(label: 'TRANSACTIONS', value: '420'),
-                  SizedBox(width: 32),
-                  _StatChip(label: 'AVERAGE SALE', value: r'$33.95'),
+                  _StatChip(label: 'TRANSACTIONS', value: '$transactionCount'),
+                  const SizedBox(width: 32),
+                  _StatChip(
+                    label: 'AVERAGE SALE',
+                    value: '\$${averageSale.toStringAsFixed(2)}',
+                  ),
                 ],
               ),
             ],
@@ -354,7 +382,7 @@ class _StatChip extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.65),
+            color: Colors.white.withAlpha(166),
             fontSize: 10,
             letterSpacing: 0.5,
           ),
@@ -455,9 +483,10 @@ class _GroupHeader extends StatelessWidget {
 }
 
 class _GroupCard extends StatelessWidget {
-  final List<SaleUiModel> sales;
+  final List<Sale> sales;
+  final Function(String) onVoid;
 
-  const _GroupCard({required this.sales});
+  const _GroupCard({required this.sales, required this.onVoid});
 
   @override
   Widget build(BuildContext context) {
@@ -467,7 +496,7 @@ class _GroupCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withAlpha(10),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -478,7 +507,7 @@ class _GroupCard extends StatelessWidget {
           final sale = sales[i];
           return Column(
             children: [
-              _SaleTile(sale: sale),
+              _SaleTile(sale: sale, onVoid: () => onVoid(sale.id)),
               if (i < sales.length - 1)
                 Divider(
                   height: 1,
@@ -495,17 +524,24 @@ class _GroupCard extends StatelessWidget {
 }
 
 class _SaleTile extends StatelessWidget {
-  final SaleUiModel sale;
+  final Sale sale;
+  final VoidCallback onVoid;
 
-  const _SaleTile({required this.sale});
+  const _SaleTile({required this.sale, required this.onVoid});
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final m = dt.minute.toString().padLeft(2, '0');
+    final period = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$h:$m $period';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final amountColor =
-        sale.isReturn ? Colors.red : const Color(0xFF1765FF);
-    final amountText = sale.isReturn
-        ? '-\$${sale.amount.abs().toStringAsFixed(2)}'
-        : '+\$${sale.amount.toStringAsFixed(2)}';
+    final amountColor = sale.isVoided ? Colors.red : const Color(0xFF1765FF);
+    final amountText = sale.isVoided
+        ? '-\$${sale.total.abs().toStringAsFixed(2)}'
+        : '+\$${sale.total.toStringAsFixed(2)}';
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -513,92 +549,47 @@ class _SaleTile extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: sale.iconBg,
+          color: sale.isVoided
+              ? const Color(0xFFFFEEEE)
+              : const Color(0xFFEEF3FF),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(sale.icon, color: sale.iconColor, size: 22),
+        child: Icon(
+          sale.isVoided ? Icons.replay : Icons.shopping_cart,
+          color: sale.isVoided ? Colors.red : const Color(0xFF1765FF),
+          size: 22,
+        ),
       ),
       title: Text(
-        sale.title,
+        sale.isVoided ? 'Voided Sale' : 'Product ${sale.productId}',
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        sale.subtitle,
+        '${sale.quantity} units \u2022 ${_formatTime(sale.createdAt)}',
         style: TextStyle(fontSize: 12, color: Colors.grey[500]),
       ),
-      trailing: Text(
-        amountText,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: amountColor,
-        ),
-      ),
-    );
-  }
-}
-
-class _AddButton extends StatefulWidget {
-  final VoidCallback onTap;
-
-  const _AddButton({required this.onTap});
-
-  @override
-  State<_AddButton> createState() => _AddButtonState();
-}
-
-class _AddButtonState extends State<_AddButton>
-    with SingleTickerProviderStateMixin {
-  static const primary = Color(0xFF1765FF);
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scale = Tween<double>(
-      begin: 1.0,
-      end: 0.88,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scale,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: primary,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withOpacity(0.35),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            amountText,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: amountColor,
+            ),
           ),
-          child: const Icon(Icons.add, color: Colors.white, size: 22),
-        ),
+          if (sale.isVoided)
+            const Text(
+              'VOIDED',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -632,7 +623,7 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
 
   void _keyTap(String key) {
     setState(() {
-      if (key == '⌫') {
+      if (key == '\u232b') {
         _quantity = _quantity.length > 1
             ? _quantity.substring(0, _quantity.length - 1)
             : '0';
@@ -756,9 +747,12 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      _Chip(label: 'In Stock: 42 units', color: green),
+                      _Chip(label: 'In Stock: -- units', color: green),
                       const SizedBox(width: 8),
-                      _Chip(label: 'SKU: CB-001', color: Colors.grey),
+                      _Chip(
+                        label: 'Price: \$${_unitPrice.toStringAsFixed(2)}',
+                        color: Colors.grey,
+                      ),
                     ],
                   ),
                 ],
@@ -853,7 +847,7 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0FBF0),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: green.withOpacity(0.25)),
+                  border: Border.all(color: green.withAlpha(64)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -938,7 +932,7 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                           ? []
                           : [
                               BoxShadow(
-                                color: green.withOpacity(0.4),
+                                color: green.withAlpha(102),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -989,7 +983,7 @@ class _NumpadState extends State<_Numpad> {
       ['1', '2', '3'],
       ['4', '5', '6'],
       ['7', '8', '9'],
-      ['.', '0', '⌫'],
+      ['.', '0', '\u232b'],
     ];
 
     return Column(
@@ -998,7 +992,7 @@ class _NumpadState extends State<_Numpad> {
           padding: const EdgeInsets.only(bottom: 6),
           child: Row(
             children: row.map((key) {
-              final isBackspace = key == '⌫';
+              final isBackspace = key == '\u232b';
               final isPressed = _pressedKey == key;
               return Expanded(
                 child: Padding(
@@ -1060,7 +1054,7 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha(26),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
