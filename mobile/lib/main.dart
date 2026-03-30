@@ -19,9 +19,14 @@ void main() async {
   runApp(
     MultiBlocProvider(
       providers: [
-        // we create the bloc and trigger the initial load event
         BlocProvider<InventoryBloc>(
-          create: (context) => InventoryBloc()..add(LoadInventoryEvent()),
+          create: (context) => InventoryBloc(
+            getProductsUseCase: di.sl(),
+            addProductUseCase: di.sl(),
+            updateProductUseCase: di.sl(),
+            deleteProductUseCase: di.sl(),
+            adjustStockUseCase: di.sl(),
+          )..add(LoadInventoryEvent('default_business_id')),
         ),
       ],
       child: const ShopOpsApp(),
