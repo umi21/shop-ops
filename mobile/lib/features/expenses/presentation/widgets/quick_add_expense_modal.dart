@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../manager/bloc/expense_bloc.dart';
-import '../manager/bloc/expense_event.dart';
+import 'package:uuid/uuid.dart';
+import 'package:mobile/core/enums/expense_category.dart';
+import 'package:mobile/features/expenses/domain/entities/expense.dart';
+import 'package:mobile/features/expenses/presentation/manager/bloc/expense_bloc.dart';
+import 'package:mobile/features/expenses/presentation/manager/bloc/expense_event.dart';
 
 class QuickAddExpenseModal extends StatefulWidget {
   const QuickAddExpenseModal({Key? key}) : super(key: key);
@@ -14,30 +17,38 @@ class _QuickAddExpenseModalState extends State<QuickAddExpenseModal> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  String _selectedCategory = 'TRANSPORT';
+  ExpenseCategory _selectedCategory = ExpenseCategory.transport;
 
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'TRANSPORT', 'icon': Icons.local_shipping},
-    {'name': 'STOCK', 'icon': Icons.inventory_2_outlined},
-    {'name': 'RENT', 'icon': Icons.storefront_outlined},
-    {'name': 'UTILITIES', 'icon': Icons.bolt},
-  ];
-
-  IconData _getIconForCategory(String category) {
-    return _categories.firstWhere((c) => c['name'] == category)['icon'];
+  IconData _getIconForCategory(ExpenseCategory category) {
+    switch (category) {
+      case ExpenseCategory.rent:
+        return Icons.storefront_outlined;
+      case ExpenseCategory.utilities:
+        return Icons.bolt;
+      case ExpenseCategory.stockPurchase:
+        return Icons.inventory_2_outlined;
+      case ExpenseCategory.transport:
+        return Icons.local_shipping;
+      case ExpenseCategory.maintenance:
+        return Icons.build_outlined;
+      case ExpenseCategory.other:
+        return Icons.receipt_long_outlined;
+    }
   }
 
-  Color _getColorForCategory(String category) {
+  Color _getColorForCategory(ExpenseCategory category) {
     switch (category) {
-      case 'TRANSPORT':
-        return const Color(0xFF1E5EFE);
-      case 'STOCK':
-        return const Color(0xFF16A34A);
-      case 'RENT':
+      case ExpenseCategory.rent:
         return const Color(0xFFF97316);
-      case 'UTILITIES':
+      case ExpenseCategory.utilities:
         return const Color(0xFFA855F7);
-      default:
+      case ExpenseCategory.stockPurchase:
+        return const Color(0xFF16A34A);
+      case ExpenseCategory.transport:
+        return const Color(0xFF1E5EFE);
+      case ExpenseCategory.maintenance:
+        return const Color(0xFF64748B);
+      case ExpenseCategory.other:
         return const Color(0xFF64748B);
     }
   }
@@ -163,26 +174,25 @@ class _QuickAddExpenseModalState extends State<QuickAddExpenseModal> {
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: _categories.map((cat) {
-              final isSelected = _selectedCategory == cat['name'];
+            children: ExpenseCategory.values.take(4).map((cat) {
+              final isSelected = _selectedCategory == cat;
+              final color = _getColorForCategory(cat);
               return GestureDetector(
-                onTap: () => setState(() => _selectedCategory = cat['name']),
+                onTap: () => setState(() => _selectedCategory = cat),
                 child: Column(
                   children: [
                     Container(
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF1E5EFE)
-                            : const Color(0xFFF8FAFC),
+                        color: isSelected ? color : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(16),
                         border: isSelected
                             ? null
                             : Border.all(color: const Color(0xFFF1F5F9)),
                       ),
                       child: Icon(
-                        cat['icon'],
+                        _getIconForCategory(cat),
                         color: isSelected
                             ? Colors.white
                             : const Color(0xFF64748B),
@@ -191,13 +201,11 @@ class _QuickAddExpenseModalState extends State<QuickAddExpenseModal> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      cat['name'],
+                      cat.displayName,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: isSelected
-                            ? const Color(0xFF1E5EFE)
-                            : const Color(0xFF94A3B8),
+                        color: isSelected ? color : const Color(0xFF94A3B8),
                       ),
                     ),
                   ],
@@ -236,26 +244,19 @@ class _QuickAddExpenseModalState extends State<QuickAddExpenseModal> {
             child: ElevatedButton.icon(
               onPressed: () {
                 final amount = double.tryParse(_amountController.text);
-                if (amount != null) {
-                  final newExpense = ExpenseEntity(
-                    title: _noteController.text.isNotEmpty
-                        ? _noteController.text
-                        : _selectedCategory,
+                if (amount != null && amount > 0) {
+                  final expense = Expense(
+                    id: const Uuid().v4(),
+                    businessId: 'default_business_id',
                     category: _selectedCategory,
-                    description: 'Just now',
                     amount: amount,
-                    time:
-                        "${TimeOfDay.now().hour}:${TimeOfDay.now().minute.toString().padLeft(2, '0')}",
-                    icon: _getIconForCategory(_selectedCategory),
-                    iconColor: _getColorForCategory(_selectedCategory),
-                    iconBgColor: _getColorForCategory(
-                      _selectedCategory,
-                    ).withOpacity(0.1),
+                    note: _noteController.text.isNotEmpty
+                        ? _noteController.text
+                        : null,
+                    createdAt: DateTime.now(),
                   );
 
-                  context.read<ExpenseBloc>().add(
-                    AddNewExpenseEvent(newExpense),
-                  );
+                  context.read<ExpenseBloc>().add(AddExpenseEvent(expense));
                   Navigator.pop(context);
                 }
               },
@@ -282,17 +283,6 @@ class _QuickAddExpenseModalState extends State<QuickAddExpenseModal> {
             ),
           ),
           const SizedBox(height: 24),
-          const Center(
-            child: Text(
-              'RECENT: GAS STATION (\$45.00)',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFCBD5E1),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
         ],
       ),
     );

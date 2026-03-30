@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/routes/app_routes.dart';
-
+import 'package:mobile/injection_container.dart' as di;
 import '../../../../core/widgets/expandable_fab.dart';
 import '../manager/bloc/expense_bloc.dart';
 import '../manager/bloc/expense_event.dart';
@@ -22,7 +22,13 @@ class _ExpensePageState extends State<ExpensePage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ExpenseBloc()..add(LoadExpensesEvent()),
+      create: (context) => ExpenseBloc(
+        getExpensesUseCase: di.sl(),
+        getExpenseReportUseCase: di.sl(),
+        addExpenseUseCase: di.sl(),
+        updateExpenseUseCase: di.sl(),
+        deleteExpenseUseCase: di.sl(),
+      )..add(LoadExpensesEvent('default_business_id')),
       child: Builder(
         builder: (context) {
           return Scaffold(
@@ -75,7 +81,8 @@ class _ExpensePageState extends State<ExpensePage> {
                   Expanded(
                     child: BlocBuilder<ExpenseBloc, ExpenseState>(
                       builder: (context, state) {
-                        if (state is ExpenseLoadingState) {
+                        if (state is ExpenseLoadingState ||
+                            state is ExpenseInitialState) {
                           return const Center(
                             child: CircularProgressIndicator(),
                           );
@@ -134,9 +141,9 @@ class _ExpensePageState extends State<ExpensePage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Total spent today',
-                                      style: TextStyle(
+                                    Text(
+                                      'Total spent ${state.selectedTab.toLowerCase()}',
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 14,
                                       ),
@@ -160,9 +167,9 @@ class _ExpensePageState extends State<ExpensePage> {
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
-                                      child: Row(
+                                      child: const Row(
                                         mainAxisSize: MainAxisSize.min,
-                                        children: const [
+                                        children: [
                                           Icon(
                                             Icons.trending_up,
                                             color: Colors.white,
@@ -170,7 +177,7 @@ class _ExpensePageState extends State<ExpensePage> {
                                           ),
                                           SizedBox(width: 4),
                                           Text(
-                                            '12% vs yesterday',
+                                            '12% vs last period',
                                             style: TextStyle(
                                               color: Colors.white,
                                               fontSize: 12,
@@ -211,32 +218,62 @@ class _ExpensePageState extends State<ExpensePage> {
                               ),
                               const SizedBox(height: 8),
 
-                              ...state.expenses
-                                  .map(
-                                    (expense) => ExpenseCard(expense: expense),
-                                  )
-                                  .toList(),
-
-                              const SizedBox(height: 20),
-
-                              Column(
-                                children: const [
-                                  Icon(Icons.history, color: Color(0xFF94A3B8)),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'No older entries for today',
-                                    style: TextStyle(
-                                      color: Color(0xFF94A3B8),
-                                      fontSize: 12,
+                              if (state.filteredExpenses.isEmpty)
+                                const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(32.0),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.receipt_long_outlined,
+                                          color: Color(0xFF94A3B8),
+                                          size: 48,
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          'No expenses for this period',
+                                          style: TextStyle(
+                                            color: Color(0xFF94A3B8),
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
+                                )
+                              else
+                                ...state.filteredExpenses
+                                    .map(
+                                      (expense) =>
+                                          ExpenseCard(expense: expense),
+                                    )
+                                    .toList(),
 
                               const SizedBox(height: 100),
                             ],
                           );
                         }
+
+                        if (state is ExpenseErrorState) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red,
+                                  size: 48,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error: ${state.message}',
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
                         return const SizedBox();
                       },
                     ),
@@ -267,8 +304,7 @@ class _ExpensePageState extends State<ExpensePage> {
                 },
               ),
             ),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.endFloat,
+            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           );
         },
       ),

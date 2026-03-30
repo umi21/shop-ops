@@ -1,108 +1,238 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/core/value_objects/date_range.dart';
+import 'package:mobile/features/expenses/domain/entities/expense.dart';
+import 'package:mobile/features/expenses/domain/usecases/add_expense_usecase.dart';
+import 'package:mobile/features/expenses/domain/usecases/delete_expense_usecase.dart';
+import 'package:mobile/features/expenses/domain/usecases/get_expense_report_usecase.dart';
+import 'package:mobile/features/expenses/domain/usecases/get_expenses_usecase.dart';
+import 'package:mobile/features/expenses/domain/usecases/update_expense_usecase.dart';
 import 'expense_event.dart';
 import 'expense_state.dart';
 
-class ExpenseEntity {
-  final String title;
-  final String category;
-  final String description;
-  final double amount;
-  final String time;
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBgColor;
-
-  ExpenseEntity({
-    required this.title,
-    required this.category,
-    required this.description,
-    required this.amount,
-    required this.time,
-    required this.icon,
-    required this.iconColor,
-    required this.iconBgColor,
-  });
-}
-
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
-  final List<ExpenseEntity> _mockExpenses = [
-    ExpenseEntity(
-      title: 'Store Rent',
-      category: 'Rent',
-      description: 'Monthly Payment',
-      amount: 850.00,
-      time: '10:30 AM',
-      icon: Icons.store_outlined,
-      iconColor: const Color(0xFF1E5EFE),
-      iconBgColor: const Color(0xFFEFF6FF),
-    ),
-    ExpenseEntity(
-      title: 'Shell Station',
-      category: 'Transport',
-      description: 'Delivery Van',
-      amount: 45.20,
-      time: '12:40 PM',
-      icon: Icons.local_gas_station_outlined,
-      iconColor: const Color(0xFFF97316),
-      iconBgColor: const Color(0xFFFFF7ED),
-    ),
-    ExpenseEntity(
-      title: 'Electricity Bill',
-      category: 'Utilities',
-      description: 'Commercial Rate',
-      amount: 312.30,
-      time: '2:10 PM',
-      icon: Icons.bolt_outlined,
-      iconColor: const Color(0xFFA855F7),
-      iconBgColor: const Color(0xFFFAF5FF),
-    ),
-    ExpenseEntity(
-      title: 'Wholesale Restock',
-      category: 'Inventory',
-      description: 'New Arrivals',
-      amount: 33.00,
-      time: '4:00 PM',
-      icon: Icons.inventory_2_outlined,
-      iconColor: const Color(0xFF16A34A),
-      iconBgColor: const Color(0xFFF0FDF4),
-    ),
-  ];
+  final GetExpensesUseCase getExpensesUseCase;
+  final GetExpenseReportUseCase getExpenseReportUseCase;
+  final AddExpenseUseCase addExpenseUseCase;
+  final UpdateExpenseUseCase updateExpenseUseCase;
+  final DeleteExpenseUseCase deleteExpenseUseCase;
 
-  ExpenseBloc() : super(ExpenseLoadingState()) {
-    on<LoadExpensesEvent>((event, emit) {
+  List<Expense> _allExpenses = [];
+
+  ExpenseBloc({
+    required this.getExpensesUseCase,
+    required this.getExpenseReportUseCase,
+    required this.addExpenseUseCase,
+    required this.updateExpenseUseCase,
+    required this.deleteExpenseUseCase,
+  }) : super(ExpenseInitialState()) {
+    on<LoadExpensesEvent>(_onLoadExpenses);
+    on<ChangeExpenseTabEvent>(_onChangeTab);
+    on<AddExpenseEvent>(_onAddExpense);
+    on<UpdateExpenseEvent>(_onUpdateExpense);
+    on<DeleteExpenseEvent>(_onDeleteExpense);
+    on<FilterExpensesByDateEvent>(_onFilterByDate);
+  }
+
+  DateRange _getDateRangeForTab(String tab) {
+    final now = DateTime.now();
+    switch (tab) {
+      case 'Daily':
+        return DateRange.daily(now);
+      case 'Weekly':
+        return DateRange.weekly(now);
+      case 'Monthly':
+        return DateRange.monthly(now);
+      default:
+        return DateRange.daily(now);
+    }
+  }
+
+  List<Expense> _filterExpensesByDate(
+    List<Expense> expenses,
+    DateRange dateRange,
+  ) {
+    return expenses.where((expense) {
+      return expense.createdAt.isAfter(dateRange.from) &&
+          expense.createdAt.isBefore(dateRange.to.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  Future<void> _onLoadExpenses(
+    LoadExpensesEvent event,
+    Emitter<ExpenseState> emit,
+  ) async {
+    emit(ExpenseLoadingState());
+
+    final result = await getExpensesUseCase(event.businessId);
+
+    result.fold((failure) => emit(ExpenseErrorState(failure.message)), (
+      expenses,
+    ) {
+      _allExpenses = expenses;
+      final dateRange = _getDateRangeForTab('Daily');
+      final filtered = _filterExpensesByDate(expenses, dateRange);
+      final total = filtered.fold(0.0, (sum, e) => sum + e.amount);
+
       emit(
         ExpenseLoadedState(
+          expenses: expenses,
+          filteredExpenses: filtered,
           selectedTab: 'Daily',
-          totalSpent: 1240.50,
-          expenses: _mockExpenses,
+          dateRange: dateRange,
+          totalSpent: total,
         ),
       );
     });
+  }
 
-    on<ChangeExpenseTabEvent>((event, emit) {
-      if (state is ExpenseLoadedState) {
-        final currentState = state as ExpenseLoadedState;
-        emit(currentState.copyWith(selectedTab: event.tab));
+  void _onChangeTab(ChangeExpenseTabEvent event, Emitter<ExpenseState> emit) {
+    if (state is ExpenseLoadedState) {
+      final currentState = state as ExpenseLoadedState;
+      final dateRange = _getDateRangeForTab(event.tab);
+      final filtered = _filterExpensesByDate(_allExpenses, dateRange);
+      final total = filtered.fold(0.0, (sum, e) => sum + e.amount);
+
+      emit(
+        currentState.copyWith(
+          selectedTab: event.tab,
+          dateRange: dateRange,
+          filteredExpenses: filtered,
+          totalSpent: total,
+        ),
+      );
+    }
+  }
+
+  Future<void> _onAddExpense(
+    AddExpenseEvent event,
+    Emitter<ExpenseState> emit,
+  ) async {
+    if (state is ExpenseLoadedState) {
+      final currentState = state as ExpenseLoadedState;
+
+      final result = await addExpenseUseCase(
+        AddExpenseParams(expense: event.expense),
+      );
+
+      result.fold(
+        (failure) => emit(currentState.copyWith(errorMessage: failure.message)),
+        (expense) {
+          _allExpenses = [..._allExpenses, expense];
+          final filtered = _filterExpensesByDate(
+            _allExpenses,
+            currentState.dateRange,
+          );
+          final total = filtered.fold(0.0, (sum, e) => sum + e.amount);
+
+          emit(
+            currentState.copyWith(
+              expenses: _allExpenses,
+              filteredExpenses: filtered,
+              totalSpent: total,
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> _onUpdateExpense(
+    UpdateExpenseEvent event,
+    Emitter<ExpenseState> emit,
+  ) async {
+    if (state is ExpenseLoadedState) {
+      final currentState = state as ExpenseLoadedState;
+
+      final result = await updateExpenseUseCase(
+        UpdateExpenseParams(expense: event.expense),
+      );
+
+      result.fold(
+        (failure) => emit(currentState.copyWith(errorMessage: failure.message)),
+        (expense) {
+          _allExpenses = _allExpenses.map((e) {
+            return e.id == expense.id ? expense : e;
+          }).toList();
+
+          final filtered = _filterExpensesByDate(
+            _allExpenses,
+            currentState.dateRange,
+          );
+          final total = filtered.fold(0.0, (sum, e) => sum + e.amount);
+
+          emit(
+            currentState.copyWith(
+              expenses: _allExpenses,
+              filteredExpenses: filtered,
+              totalSpent: total,
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  Future<void> _onDeleteExpense(
+    DeleteExpenseEvent event,
+    Emitter<ExpenseState> emit,
+  ) async {
+    if (state is ExpenseLoadedState) {
+      final currentState = state as ExpenseLoadedState;
+
+      final result = await deleteExpenseUseCase(event.expenseId);
+
+      result.fold(
+        (failure) => emit(currentState.copyWith(errorMessage: failure.message)),
+        (_) {
+          _allExpenses = _allExpenses
+              .where((e) => e.id != event.expenseId)
+              .toList();
+
+          final filtered = _filterExpensesByDate(
+            _allExpenses,
+            currentState.dateRange,
+          );
+          final total = filtered.fold(0.0, (sum, e) => sum + e.amount);
+
+          emit(
+            currentState.copyWith(
+              expenses: _allExpenses,
+              filteredExpenses: filtered,
+              totalSpent: total,
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  void _onFilterByDate(
+    FilterExpensesByDateEvent event,
+    Emitter<ExpenseState> emit,
+  ) {
+    if (state is ExpenseLoadedState) {
+      final currentState = state as ExpenseLoadedState;
+      final filtered = _filterExpensesByDate(_allExpenses, event.dateRange);
+      final total = filtered.fold(0.0, (sum, e) => sum + e.amount);
+
+      String tab = 'Daily';
+      if (event.dateRange.to.difference(event.dateRange.from).inDays == 1) {
+        tab = 'Daily';
+      } else if (event.dateRange.to.difference(event.dateRange.from).inDays <=
+          7) {
+        tab = 'Weekly';
+      } else {
+        tab = 'Monthly';
       }
-    });
 
-    on<AddNewExpenseEvent>((event, emit) {
-      if (state is ExpenseLoadedState) {
-        final currentState = state as ExpenseLoadedState;
-
-        final updatedExpenses = List<ExpenseEntity>.from(currentState.expenses)
-          ..insert(0, event.newExpense);
-
-        final newTotal = currentState.totalSpent + event.newExpense.amount;
-
-        emit(
-          currentState.copyWith(
-            expenses: updatedExpenses,
-            totalSpent: newTotal,
-          ),
-        );
-      }
-    });
+      emit(
+        currentState.copyWith(
+          selectedTab: tab,
+          dateRange: event.dateRange,
+          filteredExpenses: filtered,
+          totalSpent: total,
+        ),
+      );
+    }
   }
 }
