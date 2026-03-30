@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/expandable_fab.dart';
-import '../models/sale_ui_model.dart';
+import '../Models/sale_ui_model.dart';
 import '../../domain/entities/sales.dart';
 
 class SalesScreen extends StatefulWidget {
