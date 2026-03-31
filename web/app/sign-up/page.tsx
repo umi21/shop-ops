@@ -20,6 +20,9 @@ const signUpSchema = z.object({
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
+
 export default function SignUpPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -49,7 +52,7 @@ export default function SignUpPage() {
         const name = `${data.firstName} ${data.lastName}`.trim();
 
         try {
-            const res = await fetch("http://localhost:8080/api/v1/auth/register", {
+            const res = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
