@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import '../manager/bloc/inventory_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/features/inventory/domain/entities/product.dart';
+import 'package:mobile/features/inventory/presentation/manager/bloc/inventory_bloc.dart';
+import 'package:mobile/features/inventory/presentation/manager/bloc/inventory_event.dart';
 
 class ProductDetailsPage extends StatelessWidget {
-  final ProductEntity product;
+  final Product product;
 
   const ProductDetailsPage({Key? key, required this.product}) : super(key: key);
 
@@ -13,12 +16,12 @@ class ProductDetailsPage extends StatelessWidget {
     String statusText;
     Color statusDotColor;
 
-    if (product.quantity == 0) {
+    if (product.isOutOfStock) {
       statusBgColor = const Color(0xFFFFEBEB);
       statusTextColor = const Color(0xFFEF4444);
       statusDotColor = const Color(0xFFEF4444);
       statusText = 'OUT OF STOCK';
-    } else if (product.quantity <= 5) {
+    } else if (product.isLowStock) {
       statusBgColor = const Color(0xFFFFF3E0);
       statusTextColor = const Color(0xFFF97316);
       statusDotColor = const Color(0xFFF97316);
@@ -44,7 +47,7 @@ class ProductDetailsPage extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Inventory',
+          'Product Details',
           style: TextStyle(
             color: Color(0xFF1E293B),
             fontSize: 18,
@@ -88,7 +91,7 @@ class ProductDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        product.category.toUpperCase(),
+                        'ID: ${product.id}',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -106,18 +109,12 @@ class ProductDetailsPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.orange.shade100,
                     borderRadius: BorderRadius.circular(16),
-                    image: DecorationImage(
-                      image: NetworkImage(product.imageUrl),
-                      fit: BoxFit.cover,
-                    ),
                   ),
-                  child: product.imageUrl.isEmpty || product.imageUrl == 'url'
-                      ? const Icon(
-                          Icons.headphones,
-                          color: Colors.orange,
-                          size: 40,
-                        )
-                      : null,
+                  child: const Icon(
+                    Icons.inventory_2,
+                    color: Colors.orange,
+                    size: 40,
+                  ),
                 ),
               ],
             ),
@@ -137,7 +134,7 @@ class ProductDetailsPage extends StatelessWidget {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  '${product.quantity}',
+                  '${product.stockQuantity}',
                   style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w800,
@@ -183,13 +180,18 @@ class ProductDetailsPage extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _buildSummaryCard('MONTHLY SALES', '48', '+12%', true),
+                  child: _buildSummaryCard(
+                    'SELLING PRICE',
+                    '\$${product.defaultSellingPrice.toStringAsFixed(2)}',
+                    '',
+                    false,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildSummaryCard(
-                    'STOCK VALUE',
-                    '\$49,558',
+                    'LOW STOCK THRESHOLD',
+                    '${product.lowStockThreshold}',
                     '',
                     false,
                   ),
@@ -201,10 +203,7 @@ class ProductDetailsPage extends StatelessWidget {
             _buildChartSection(),
             const SizedBox(height: 24),
 
-            _buildPricingHistory(),
-            const SizedBox(height: 24),
-
-            _buildLogisticsDetails(),
+            _buildProductDetails(),
             const SizedBox(height: 40),
           ],
         ),
@@ -228,7 +227,11 @@ class ProductDetailsPage extends StatelessWidget {
               Expanded(
                 flex: 1,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    context.read<InventoryBloc>().add(
+                      AdjustStockEvent(product.id, -1),
+                    );
+                  },
                   icon: const Icon(Icons.remove, color: Colors.white, size: 20),
                   label: const Text(
                     'REMOVE',
@@ -251,7 +254,11 @@ class ProductDetailsPage extends StatelessWidget {
               Expanded(
                 flex: 1,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    context.read<InventoryBloc>().add(
+                      AdjustStockEvent(product.id, 1),
+                    );
+                  },
                   icon: const Icon(Icons.add, color: Colors.white, size: 20),
                   label: const Text(
                     'ADD STOCK',
@@ -276,8 +283,6 @@ class ProductDetailsPage extends StatelessWidget {
       ),
     );
   }
-
-  // --- Internal Widgets ---
 
   Widget _buildSummaryCard(
     String title,
@@ -349,7 +354,7 @@ class ProductDetailsPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'SALES TRENDS (30D)',
+                'STOCK HISTORY',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -387,7 +392,7 @@ class ProductDetailsPage extends StatelessWidget {
                 _buildBar(60, const Color(0xFFF1F5F9)),
                 _buildBar(50, const Color(0xFFF1F5F9)),
                 _buildBar(80, const Color(0xFF93C5FD)),
-                _buildBar(120, const Color(0xFF1E5EFE)), // Max
+                _buildBar(120, const Color(0xFF1E5EFE)),
                 _buildBar(75, const Color(0xFF93C5FD)),
                 _buildBar(55, const Color(0xFFF1F5F9)),
                 _buildBar(90, const Color(0xFFF1F5F9)),
@@ -442,7 +447,7 @@ class ProductDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPricingHistory() {
+  Widget _buildProductDetails() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -454,103 +459,7 @@ class ProductDetailsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'PRICING HISTORY',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildPriceRow(
-            '\$349.00',
-            'Set by Admin',
-            'Today, 09:12 AM',
-            isRecent: true,
-          ),
-          const Divider(height: 30, color: Color(0xFFE2E8F0)),
-          _buildPriceRow(
-            '\$329.00',
-            'Initial Price',
-            'Nov 24, 2023',
-            isRecent: false,
-          ),
-          const Divider(height: 30, color: Color(0xFFE2E8F0)),
-          _buildPriceRow(
-            '\$349.00',
-            'Initial Price',
-            'Aug 12, 2023',
-            isRecent: false,
-          ),
-          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-          Center(
-            child: TextButton(
-              onPressed: () {},
-              child: const Text(
-                'VIEW FULL LOGS',
-                style: TextStyle(
-                  color: Color(0xFF1E5EFE),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriceRow(
-    String price,
-    String subtitle,
-    String date, {
-    required bool isRecent,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              price,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isRecent
-                    ? const Color(0xFF1E293B)
-                    : const Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-            ),
-          ],
-        ),
-        Text(
-          date,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLogisticsDetails() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'LOGISTICS & DETAILS',
+            'PRODUCT DETAILS',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -558,42 +467,25 @@ class ProductDetailsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _buildLogisticsRow('SKU Number', product.sku),
+          _buildLogisticsRow('Product ID', product.id),
           const SizedBox(height: 16),
-          _buildLogisticsRow('Supplier', 'Sony Electronics Distribution'),
+          _buildLogisticsRow('Business ID', product.businessId),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Reorder Point',
-                style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-              ),
-              Row(
-                children: const [
-                  Text(
-                    '25 units',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  Icon(
-                    Icons.notifications_active,
-                    color: Color(0xFF1E5EFE),
-                    size: 16,
-                  ),
-                ],
-              ),
-            ],
+          _buildLogisticsRow(
+            'Low Stock Threshold',
+            '${product.lowStockThreshold} units',
           ),
           const SizedBox(height: 16),
-          _buildLogisticsRow('Last Restocked', 'Oct 15, 2023'),
+          _buildLogisticsRow('Created', _formatDate(product.createdAt)),
+          const SizedBox(height: 16),
+          _buildLogisticsRow('Last Updated', _formatDate(product.updatedAt)),
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   Widget _buildLogisticsRow(String title, String value) {
@@ -604,12 +496,15 @@ class ProductDetailsPage extends StatelessWidget {
           title,
           style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
+        Flexible(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
+            textAlign: TextAlign.right,
           ),
         ),
       ],

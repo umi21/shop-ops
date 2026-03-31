@@ -22,3 +22,18 @@ class UpdatePricesEvent extends AddProductEvent {
   @override
   List<Object?> get props => [costPrice, sellingPrice];
 }
+
+class SubmitProductEvent extends AddProductEvent {
+  final String name;
+  final int stockQuantity;
+  final double sellingPrice;
+
+  SubmitProductEvent({
+    required this.name,
+    required this.stockQuantity,
+    required this.sellingPrice,
+  });
+
+  @override
+  List<Object?> get props => [name, stockQuantity, sellingPrice];
+}

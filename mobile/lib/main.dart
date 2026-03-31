@@ -5,13 +5,28 @@ import 'core/routes/app_routes.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_bloc.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_event.dart';
 
-void main() {
+import 'package:mobile/injection_container.dart' as di;
+import 'package:mobile/shared/sync/sync_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await di.init();
+
+  final syncService = di.sl<SyncService>();
+  syncService.startListening();
+
   runApp(
     MultiBlocProvider(
       providers: [
-        // we create the bloc and trigger the initial load event
         BlocProvider<InventoryBloc>(
-          create: (context) => InventoryBloc()..add(LoadInventoryEvent()),
+          create: (context) => InventoryBloc(
+            getProductsUseCase: di.sl(),
+            addProductUseCase: di.sl(),
+            updateProductUseCase: di.sl(),
+            deleteProductUseCase: di.sl(),
+            adjustStockUseCase: di.sl(),
+          )..add(LoadInventoryEvent('default_business_id')),
         ),
       ],
       child: const ShopOpsApp(),

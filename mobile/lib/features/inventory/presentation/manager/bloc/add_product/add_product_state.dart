@@ -6,6 +6,9 @@ class AddProductState extends Equatable {
   final double sellingPrice;
   final double marginAmount;
   final double marginPercentage;
+  final bool isLoading;
+  final bool isSuccess;
+  final String? errorMessage;
 
   const AddProductState({
     this.stock = 0,
@@ -13,6 +16,9 @@ class AddProductState extends Equatable {
     this.sellingPrice = 0.0,
     this.marginAmount = 0.0,
     this.marginPercentage = 0.0,
+    this.isLoading = false,
+    this.isSuccess = false,
+    this.errorMessage,
   });
 
   AddProductState copyWith({
@@ -21,6 +27,9 @@ class AddProductState extends Equatable {
     double? sellingPrice,
     double? marginAmount,
     double? marginPercentage,
+    bool? isLoading,
+    bool? isSuccess,
+    String? errorMessage,
   }) {
     return AddProductState(
       stock: stock ?? this.stock,
@@ -28,6 +37,9 @@ class AddProductState extends Equatable {
       sellingPrice: sellingPrice ?? this.sellingPrice,
       marginAmount: marginAmount ?? this.marginAmount,
       marginPercentage: marginPercentage ?? this.marginPercentage,
+      isLoading: isLoading ?? this.isLoading,
+      isSuccess: isSuccess ?? this.isSuccess,
+      errorMessage: errorMessage,
     );
   }
 
@@ -38,5 +50,8 @@ class AddProductState extends Equatable {
     sellingPrice,
     marginAmount,
     marginPercentage,
+    isLoading,
+    isSuccess,
+    errorMessage,
   ];
 }

@@ -1,26 +1,66 @@
 import 'package:equatable/equatable.dart';
-import 'inventory_bloc.dart'; // Pour importer ProductEntity
+import 'package:mobile/features/inventory/domain/entities/product.dart';
 
 abstract class InventoryState extends Equatable {
   @override
   List<Object?> get props => [];
 }
 
-// État initial (pendant le chargement)
+class InventoryInitialState extends InventoryState {}
+
 class InventoryLoadingState extends InventoryState {}
 
-// État quand les données sont prêtes à être affichées
 class InventoryLoadedState extends InventoryState {
-  final List<ProductEntity> products;
+  final List<Product> products;
+  final List<Product> filteredProducts;
   final List<String> categories;
   final String selectedCategory;
+  final String searchQuery;
+  final String? errorMessage;
 
   InventoryLoadedState({
     required this.products,
+    required this.filteredProducts,
     required this.categories,
     required this.selectedCategory,
+    this.searchQuery = '',
+    this.errorMessage,
   });
 
+  InventoryLoadedState copyWith({
+    List<Product>? products,
+    List<Product>? filteredProducts,
+    List<String>? categories,
+    String? selectedCategory,
+    String? searchQuery,
+    String? errorMessage,
+  }) {
+    return InventoryLoadedState(
+      products: products ?? this.products,
+      filteredProducts: filteredProducts ?? this.filteredProducts,
+      categories: categories ?? this.categories,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
+      searchQuery: searchQuery ?? this.searchQuery,
+      errorMessage: errorMessage,
+    );
+  }
+
   @override
-  List<Object?> get props => [products, categories, selectedCategory];
+  List<Object?> get props => [
+    products,
+    filteredProducts,
+    categories,
+    selectedCategory,
+    searchQuery,
+    errorMessage,
+  ];
+}
+
+class InventoryErrorState extends InventoryState {
+  final String message;
+
+  InventoryErrorState(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
