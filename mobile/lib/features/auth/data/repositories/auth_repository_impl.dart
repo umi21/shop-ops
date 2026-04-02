@@ -28,16 +28,21 @@ class AuthRepositoryImpl implements AuthRepository {
         return Right(UserMapper.toEntity(localUser));
       }
 
-      final response = await remoteDataSource.login(phone, password);
-      final userModel = UserMapper.fromJson(response['user']);
-      await localDataSource.saveUser(userModel);
-      return Right(UserMapper.toEntity(userModel));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message, statusCode: e.statusCode));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
+      try {
+        final response = await remoteDataSource.login(phone, password);
+        final userModel = UserMapper.fromJson(response['user']);
+        await localDataSource.saveUser(userModel);
+        return Right(UserMapper.toEntity(userModel));
+      } on NetworkException {
+        if (localUser != null) {
+          return Right(UserMapper.toEntity(localUser));
+        }
+        return const Left(
+          NetworkFailure('No internet connection and no cached user'),
+        );
+      }
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(CacheFailure(e.toString()));
     }
   }
 
@@ -48,6 +53,19 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String phone,
   }) async {
+    final now = DateTime.now();
+    final tempId = uuid.v4();
+    final tempUser = User(
+      id: tempId,
+      email: email,
+      phone: phone,
+      name: name,
+      createdAt: now,
+      updatedAt: now,
+    );
+    final userModel = UserMapper.toModel(tempUser, isSynced: false);
+    await localDataSource.saveUser(userModel);
+
     try {
       final response = await remoteDataSource.register(
         email: email,
@@ -56,25 +74,13 @@ class AuthRepositoryImpl implements AuthRepository {
         phone: phone,
       );
 
-      final userModel = UserMapper.fromJson(response['user']);
-      await localDataSource.saveUser(userModel);
-      return Right(UserMapper.toEntity(userModel));
+      final syncedUserModel = UserMapper.fromJson(response['user']);
+      await localDataSource.saveUser(syncedUserModel);
+      return Right(UserMapper.toEntity(syncedUserModel));
+    } on NetworkException {
+      return Right(tempUser);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message, statusCode: e.statusCode));
-    } on NetworkException catch (e) {
-      final now = DateTime.now();
-      final tempId = uuid.v4();
-      final tempUser = User(
-        id: tempId,
-        email: email,
-        phone: phone,
-        name: name,
-        createdAt: now,
-        updatedAt: now,
-      );
-      final userModel = UserMapper.toModel(tempUser, isSynced: false);
-      await localDataSource.saveUser(userModel);
-      return Right(tempUser);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

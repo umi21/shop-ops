@@ -110,14 +110,14 @@ class ApiClient {
     }
   }
 
-  ServerException _handleError(DioException error) {
+  Exception _handleError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return const ServerException('Connection timeout');
       case DioExceptionType.connectionError:
-        return const ServerException('No internet connection');
+        return const NetworkException('No internet connection');
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
         final message = error.response?.data?['message'] ?? 'Server error';
