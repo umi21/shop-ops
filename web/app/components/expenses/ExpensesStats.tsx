@@ -18,7 +18,7 @@ const ExpensesStats: React.FC<ExpensesStatsProps> = ({
   transactionCount,
 }) => {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid gap-4 lg:grid-cols-3" data-tour="expense-stats">
       <Card
         title="Total Expenses"
         value={totalExpenses}

@@ -2,9 +2,10 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, KeyRound, ShieldCheck } from "lucide-react";
+import { Building2, KeyRound, ShieldCheck, HelpCircle } from "lucide-react";
 import PageTitle from "@/app/components/ui/PageTitle";
 import Card from "@/app/components/ui/Card";
+import { useTour } from "@/app/hooks/useTour";
 
 type ProfileDetails = {
   fullName: string;
@@ -132,6 +133,7 @@ const mapDataToProfile = (user: ApiUser, business: ApiBusiness | null): ProfileD
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { resetTour } = useTour();
 
   const [savedProfile, setSavedProfile] = useState<ProfileDetails>(defaultProfile);
   const [draftProfile, setDraftProfile] = useState<ProfileDetails>(defaultProfile);
@@ -423,12 +425,21 @@ export default function ProfilePage() {
           title="Profile"
           subtitle="Manage your user and business information"
         />
-        <button
-          onClick={handleLogout}
-          className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
-        >
-          Logout
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={resetTour}
+            className="rounded-lg bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 flex items-center gap-2"
+          >
+            <HelpCircle size={16} />
+            <span className="hidden sm:inline">Restart Tour</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

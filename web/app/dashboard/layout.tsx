@@ -1,8 +1,15 @@
+"use client";
+
 import React from "react";
 import Sidebar from "../components/ui/Sidebar";
 import Header from "../components/ui/Header";
+import GuidedTour from "../components/ui/GuidedTour";
+import { useTour } from "../hooks/useTour";
+import { dashboardTourSteps } from "../config/tourSteps";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { showTour, completeTour, skipTour } = useTour();
+
   return (
     <div className="flex h-full w-full h-screen">
       <Sidebar />
@@ -12,6 +19,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </div>
       </div>
+
+      {showTour && (
+        <GuidedTour
+          steps={dashboardTourSteps}
+          onComplete={completeTour}
+          onSkip={skipTour}
+        />
+      )}
     </div>
   );
 }

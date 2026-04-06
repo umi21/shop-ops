@@ -8,6 +8,9 @@ import ExpensesCharts from "@/app/components/expenses/ExpensesCharts";
 import ExpensesTable, {
   ExpenseRow,
 } from "@/app/components/tables/ExpensesTable";
+import GuidedTour from "@/app/components/ui/GuidedTour";
+import { useTour } from "@/app/hooks/useTour";
+import { expensesTourSteps } from "@/app/config/tourSteps";
 import {
   ApiExpense,
   EXPENSE_CATEGORY_LABELS,
@@ -120,6 +123,7 @@ const toExpenseRow = (expense: ApiExpense): ExpenseRow => {
 };
 
 const Expenses = () => {
+  const { showTour, completeTour, skipTour } = useTour("expenses");
   const [activeBusinessId, setActiveBusinessId] = useState("");
   const [timeRange, setTimeRange] = useState("all");
   const [category, setCategory] = useState("all");
@@ -658,6 +662,15 @@ const Expenses = () => {
           </form>
         </div>
       ) : null}
+
+      {showTour && (
+        <GuidedTour
+          steps={expensesTourSteps}
+          onComplete={completeTour}
+          onSkip={skipTour}
+          allowNavigation={true}
+        />
+      )}
     </div>
   );
 };

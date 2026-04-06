@@ -30,31 +30,37 @@ export default function Sidebar() {
             label: "Dashboard",
             href: "/dashboard",
             icon: <LayoutDashboard size={20} />,
+            tourId: "sidebar-dashboard",
         },
         {
             label: "Sales",
             href: "/dashboard/sales",
             icon: <ShoppingCart size={20} />,
+            tourId: "sidebar-sales",
         },
         {
             label: "Expenses",
             href: "/dashboard/expenses",
             icon: <Receipt size={20} />,
+            tourId: "sidebar-expenses",
         },
         {
             label: "Inventory",
             href: "/dashboard/inventory",
             icon: <Package size={20} />,
+            tourId: "sidebar-inventory",
         },
         {
             label: "Reports",
             href: "/dashboard/reports",
             icon: <BarChart3 size={20} />,
+            tourId: "sidebar-reports",
         },
         {
             label: "Settings",
             href: "/dashboard/settings",
             icon: <Settings size={20} />,
+            tourId: "sidebar-settings",
         },
     ];
 
@@ -144,6 +150,7 @@ export default function Sidebar() {
                                 key={item.href}
                                 href={item.href}
                                 onClick={() => setIsMobileOpen(false)}
+                                data-tour={item.tourId}
                                 className={`
                   group relative flex items-center rounded-lg transition-all duration-200
                   ${isCollapsed ? "justify-center py-3" : "px-3 py-2.5 gap-3"}

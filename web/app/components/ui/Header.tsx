@@ -112,7 +112,9 @@ export default function Header() {
 
       {/* Store Selection */}
       <div className="flex items-center gap-4">
-        <BusinessSwitcher />
+        <div data-tour="business-switcher">
+          <BusinessSwitcher />
+        </div>
 
         {/* online status  */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-xs font-medium text-emerald-600">
@@ -207,7 +209,7 @@ export default function Header() {
         </div>
 
         {/* profile */}
-        <Link href="/dashboard/profile" className="flex items-center gap-2 ml-1">
+        <Link href="/dashboard/profile" className="flex items-center gap-2 ml-1" data-tour="profile-menu">
           <div className="h-9 w-9 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-xs shadow-sm hover:ring-2 hover:ring-indigo-100 transition-all">
             {user ? user.name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase() : "NA"}
           </div>

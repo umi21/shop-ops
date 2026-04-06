@@ -1,18 +1,42 @@
 "use client";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
+const REMEMBER_ME_KEY = "remember_me_credentials";
+
+type RememberedCredentials = {
+  phone: string;
+  rememberMe: boolean;
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Load remembered credentials on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const remembered = localStorage.getItem(REMEMBER_ME_KEY);
+        if (remembered) {
+          const credentials: RememberedCredentials = JSON.parse(remembered);
+          setPhone(credentials.phone);
+          setRememberMe(credentials.rememberMe);
+        }
+      } catch (err) {
+        console.error("Failed to load remembered credentials:", err);
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +52,23 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.token) {
-        document.cookie = `token=${data.token}; path=/; max-age=86400`;
-        document.cookie = `refresh_token=${data.refresh_token}; path=/; max-age=604800`;
+        // Handle Remember Me
+        if (rememberMe) {
+          localStorage.setItem(
+            REMEMBER_ME_KEY,
+            JSON.stringify({ phone, rememberMe: true })
+          );
+          // Set longer expiry for cookies (30 days)
+          document.cookie = `token=${data.token}; path=/; max-age=2592000`;
+          document.cookie = `refresh_token=${data.refresh_token}; path=/; max-age=2592000`;
+        } else {
+          // Remove remembered credentials if unchecked
+          localStorage.removeItem(REMEMBER_ME_KEY);
+          // Set shorter expiry (1 day)
+          document.cookie = `token=${data.token}; path=/; max-age=86400`;
+          document.cookie = `refresh_token=${data.refresh_token}; path=/; max-age=604800`;
+        }
+
         localStorage.setItem("user", JSON.stringify(data.user));
         router.push("/dashboard");
       } else {

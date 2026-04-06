@@ -4,6 +4,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PageTitle from "@/app/components/ui/PageTitle";
 import Card from "@/app/components/ui/Card";
 import { DollarSign } from "lucide-react";
+import GuidedTour from "@/app/components/ui/GuidedTour";
+import { useTour } from "@/app/hooks/useTour";
+import { salesTourSteps } from "@/app/config/tourSteps";
 import {
   Table,
   TableBody,
@@ -141,6 +144,7 @@ const toSalesRow = (sale: ApiSale): SalesRow => {
 };
 
 const SalesPage = () => {
+  const { showTour, completeTour, skipTour } = useTour("sales");
   const [activeBusinessId, setActiveBusinessId] = useState("");
   const [timeRange, setTimeRange] = useState("all");
   const [search, setSearch] = useState("");
@@ -462,14 +466,15 @@ const SalesPage = () => {
     : "Select a business to start tracking sales";
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="flex flex-col space-y-4 p-4 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <PageTitle title="Sales" subtitle={subtitle} />
         <button
           type="button"
           onClick={openCreateModal}
           disabled={!activeBusinessId}
-          className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          data-tour="record-sale-btn"
         >
           Record Sale
         </button>
@@ -493,7 +498,7 @@ const SalesPage = () => {
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2" data-tour="sales-stats">
         <Card
           title="Today's Sales"
           value={isLoadingSummary ? "Loading..." : formatSalesMoney(dailyRevenue)}
@@ -514,7 +519,7 @@ const SalesPage = () => {
         />
       </div>
 
-      <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-3">
+      <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4" data-tour="sales-filters">
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Time range
@@ -530,7 +535,7 @@ const SalesPage = () => {
           </select>
         </div>
 
-        <div className="sm:col-span-2">
+        <div>
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
             Search
           </label>
@@ -549,11 +554,11 @@ const SalesPage = () => {
         {isDetailLoading ? (
           <p className="mt-2 text-slate-500">Loading sale details...</p>
         ) : details ? (
-          <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            <p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <p className="break-all">
               <span className="font-medium">ID:</span> {details.id}
             </p>
-            <p>
+            <p className="break-all">
               <span className="font-medium">Product:</span> {details.product_id ?? "N/A"}
             </p>
             <p>
@@ -568,7 +573,7 @@ const SalesPage = () => {
             <p>
               <span className="font-medium">Status:</span> {details.is_voided ? "Voided" : "Active"}
             </p>
-            <p className="sm:col-span-2 lg:col-span-2">
+            <p className="sm:col-span-2">
               <span className="font-medium">Note:</span> {details.note || "-"}
             </p>
           </div>
@@ -577,105 +582,107 @@ const SalesPage = () => {
         )}
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <Table>
-          <TableHeader className="bg-slate-50 text-xs uppercase tracking-wide">
-            <TableRow className="border-slate-200 hover:bg-transparent">
-              <TableHead className="px-5 py-3">Date &amp; Time</TableHead>
-              <TableHead className="px-5 py-3">Product ID</TableHead>
-              <TableHead className="px-5 py-3 text-right">Qty</TableHead>
-              <TableHead className="px-5 py-3 text-right">Unit Price</TableHead>
-              <TableHead className="px-5 py-3 text-right">Total</TableHead>
-              <TableHead className="px-5 py-3">Note</TableHead>
-              <TableHead className="px-5 py-3 text-right">Status</TableHead>
-              <TableHead className="px-5 py-3 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoadingList ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={8} className="px-5 py-10 text-center text-slate-500">
-                  Loading sales...
-                </TableCell>
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden" data-tour="sales-table">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-slate-50 text-xs uppercase tracking-wide">
+              <TableRow className="border-slate-200 hover:bg-transparent">
+                <TableHead className="px-3 py-3 sm:px-5 whitespace-nowrap">Date &amp; Time</TableHead>
+                <TableHead className="px-3 py-3 sm:px-5 whitespace-nowrap">Product ID</TableHead>
+                <TableHead className="px-3 py-3 sm:px-5 text-right whitespace-nowrap">Qty</TableHead>
+                <TableHead className="px-3 py-3 sm:px-5 text-right whitespace-nowrap">Unit Price</TableHead>
+                <TableHead className="px-3 py-3 sm:px-5 text-right whitespace-nowrap">Total</TableHead>
+                <TableHead className="px-3 py-3 sm:px-5 whitespace-nowrap">Note</TableHead>
+                <TableHead className="px-3 py-3 sm:px-5 text-right whitespace-nowrap">Status</TableHead>
+                <TableHead className="px-3 py-3 sm:px-5 text-right whitespace-nowrap">Actions</TableHead>
               </TableRow>
-            ) : filteredRows.length > 0 ? (
-              filteredRows.map((row) => (
-                <TableRow key={row.id} className="border-slate-100">
-                  <TableCell className="px-5 py-4">
-                    <div className="font-medium text-slate-800">{formatDateForDisplay(row.date)}</div>
-                    <div className="text-xs text-slate-500">{row.time}</div>
-                  </TableCell>
-                  <TableCell className="px-5 py-4 font-mono text-xs text-slate-600">
-                    {row.productId}
-                  </TableCell>
-                  <TableCell className="px-5 py-4 text-right font-medium text-slate-900">
-                    {row.quantity}
-                  </TableCell>
-                  <TableCell className="px-5 py-4 text-right">{row.unitPrice}</TableCell>
-                  <TableCell className="px-5 py-4 text-right font-semibold text-slate-900">
-                    {row.total}
-                  </TableCell>
-                  <TableCell className="max-w-xs px-5 py-4 text-slate-600">{row.note}</TableCell>
-                  <TableCell className="px-5 py-4 text-right">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                        row.status === "Voided"
-                          ? "bg-rose-100 text-rose-700"
-                          : "bg-emerald-100 text-emerald-700"
-                      }`}
-                    >
-                      {row.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-5 py-4">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleView(row)}
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
-                      >
-                        View
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(row)}
-                        disabled={row.status === "Voided"}
-                        className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleVoid(row)}
-                        disabled={row.status === "Voided"}
-                        className="rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Void
-                      </button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {isLoadingList ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={8} className="px-3 py-10 sm:px-5 text-center text-slate-500">
+                    Loading sales...
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={8} className="px-5 py-10 text-center text-slate-500">
-                  No sales found for the selected filters.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ) : filteredRows.length > 0 ? (
+                filteredRows.map((row) => (
+                  <TableRow key={row.id} className="border-slate-100">
+                    <TableCell className="px-3 py-4 sm:px-5 whitespace-nowrap">
+                      <div className="font-medium text-slate-800">{formatDateForDisplay(row.date)}</div>
+                      <div className="text-xs text-slate-500">{row.time}</div>
+                    </TableCell>
+                    <TableCell className="px-3 py-4 sm:px-5 font-mono text-xs text-slate-600 max-w-[120px] truncate">
+                      {row.productId}
+                    </TableCell>
+                    <TableCell className="px-3 py-4 sm:px-5 text-right font-medium text-slate-900 whitespace-nowrap">
+                      {row.quantity}
+                    </TableCell>
+                    <TableCell className="px-3 py-4 sm:px-5 text-right whitespace-nowrap">{row.unitPrice}</TableCell>
+                    <TableCell className="px-3 py-4 sm:px-5 text-right font-semibold text-slate-900 whitespace-nowrap">
+                      {row.total}
+                    </TableCell>
+                    <TableCell className="px-3 py-4 sm:px-5 text-slate-600 max-w-[150px] truncate">{row.note}</TableCell>
+                    <TableCell className="px-3 py-4 sm:px-5 text-right whitespace-nowrap">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium sm:px-3 ${
+                          row.status === "Voided"
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {row.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-3 py-4 sm:px-5 whitespace-nowrap">
+                      <div className="flex justify-end gap-1 sm:gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleView(row)}
+                          className="rounded-full border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 sm:px-3"
+                        >
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(row)}
+                          disabled={row.status === "Voided"}
+                          className="rounded-full border border-slate-200 px-2 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleVoid(row)}
+                          disabled={row.status === "Voided"}
+                          className="rounded-full border border-rose-200 px-2 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
+                        >
+                          Void
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={8} className="px-3 py-10 sm:px-5 text-center text-slate-500">
+                    No sales found for the selected filters.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-        <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>
+        <div className="flex flex-col gap-3 border-t border-slate-200 px-3 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <span className="text-center sm:text-left">
             Showing {startIndex} to {endIndex} of {shownTotalCount} results
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center sm:justify-end">
             <button
               type="button"
               onClick={handlePreviousPage}
               disabled={currentPage === 1 || isLoadingList}
-              className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
             >
               Previous
             </button>
@@ -683,7 +690,7 @@ const SalesPage = () => {
               type="button"
               onClick={handleNextPage}
               disabled={currentPage === totalPages || filteredRows.length === 0 || isLoadingList}
-              className="rounded-full border border-slate-200 px-4 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
             >
               Next
             </button>
@@ -692,23 +699,23 @@ const SalesPage = () => {
       </div>
 
       {isCreateOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
           <form
             onSubmit={submitForm}
-            className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-4 shadow-xl sm:p-6 my-8"
           >
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
               {editingSaleId ? "Edit Sale Note" : "Record Sale"}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 sm:text-sm">
               {editingSaleId
                 ? "Only note updates are allowed for existing sales."
                 : "Record a new sale for the active business."}
             </p>
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-xs font-medium text-slate-700 sm:text-sm">
                   Product
                 </label>
                 <select
@@ -731,9 +738,9 @@ const SalesPage = () => {
                 </select>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                  <label className="mb-1 block text-xs font-medium text-slate-700 sm:text-sm">
                     Unit Price
                   </label>
                   <input
@@ -754,7 +761,7 @@ const SalesPage = () => {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                  <label className="mb-1 block text-xs font-medium text-slate-700 sm:text-sm">
                     Quantity
                   </label>
                   <input
@@ -776,7 +783,7 @@ const SalesPage = () => {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-xs font-medium text-slate-700 sm:text-sm">
                   Note
                 </label>
                 <textarea
@@ -794,18 +801,18 @@ const SalesPage = () => {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:mt-6 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="w-full rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
+                className="w-full rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50 sm:w-auto"
               >
                 {isSubmitting
                   ? "Saving..."
@@ -817,6 +824,15 @@ const SalesPage = () => {
           </form>
         </div>
       ) : null}
+
+      {showTour && (
+        <GuidedTour
+          steps={salesTourSteps}
+          onComplete={completeTour}
+          onSkip={skipTour}
+          allowNavigation={true}
+        />
+      )}
     </div>
   );
 };

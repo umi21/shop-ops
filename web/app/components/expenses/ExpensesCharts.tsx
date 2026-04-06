@@ -12,7 +12,7 @@ const ExpensesCharts: React.FC<ExpensesChartsProps> = ({
   trendData,
 }) => {
   return (
-    <div className="grid gap-4 lg:grid-cols-5">
+    <div className="grid gap-4 lg:grid-cols-5" data-tour="expense-charts">
       <ExpensesCategoryChart className="lg:col-span-2" data={categoryData} />
       <ExpensesTrendChart className="lg:col-span-3" data={trendData} />
     </div>

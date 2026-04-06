@@ -228,15 +228,17 @@ export default function DashboardPage() {
 
             {/* Dashboard KPI Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card
-                    title="Today's Sales"
-                    value={isLoading ? "Loading..." : formatSalesMoney(todaySales)}
-                    icon={DollarSign}
-                    iconWrapperClass="bg-indigo-50 text-indigo-600"
-                    trend=""
-                    trendDirection="up"
-                    description={`${todaySalesCount} transactions today`}
-                />
+                <div data-tour="stats-card">
+                    <Card
+                        title="Today's Sales"
+                        value={isLoading ? "Loading..." : formatSalesMoney(todaySales)}
+                        icon={DollarSign}
+                        iconWrapperClass="bg-indigo-50 text-indigo-600"
+                        trend=""
+                        trendDirection="up"
+                        description={`${todaySalesCount} transactions today`}
+                    />
+                </div>
 
                 <Card
                     title="Today's Expenses"
@@ -273,7 +275,7 @@ export default function DashboardPage() {
                 <SalesVsExpensesChart data={chartData} className="col-span-4" />
 
                 {/* Low Stock Alerts */}
-                <div className="col-span-3 rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="col-span-3 rounded-xl border border-slate-200 bg-white shadow-sm" data-tour="stock-alerts">
                     <div className="p-6 flex flex-col space-y-1.5">
                         <h3 className="font-semibold leading-none tracking-tight flex items-center gap-2">
                             <TriangleAlert className="h-4 w-4 text-amber-500" />

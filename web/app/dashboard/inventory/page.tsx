@@ -6,6 +6,9 @@ import Card from "@/app/components/ui/Card";
 import { AlertTriangle, PackageX, TrendingUp } from "lucide-react";
 import { ProductTabs } from "@/app/components/ui/ProductTabs";
 import { Product, ProductTable } from "@/app/components/tables/ProductTable";
+import GuidedTour from "@/app/components/ui/GuidedTour";
+import { useTour } from "@/app/hooks/useTour";
+import { inventoryTourSteps } from "@/app/config/tourSteps";
 import {
   adjustStock,
   ApiProduct,
@@ -80,6 +83,7 @@ const toTableProduct = (product: ApiProduct): Product => {
 };
 
 const Inventory = () => {
+  const { showTour, completeTour, skipTour } = useTour("inventory");
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeBusinessId, setActiveBusinessId] = useState("");
@@ -454,6 +458,7 @@ const Inventory = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onSearch={setSearchQuery}
+          data-tour="product-filters"
         />
 
         <div className="flex items-center justify-between">
@@ -466,6 +471,7 @@ const Inventory = () => {
             onClick={openCreate}
             disabled={!activeBusinessId || isSaving}
             className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            data-tour="add-product-btn"
           >
             Add Product
           </button>
@@ -575,14 +581,25 @@ const Inventory = () => {
         ) : null}
 
         {/* table with filtered list */}
-        <ProductTable
-          products={filteredProducts}
-          onRestock={handleRestock}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-          mutatingProductId={mutatingProductId}
-        />
+        <div data-tour="product-table">
+          <ProductTable
+            products={filteredProducts}
+            onRestock={handleRestock}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            mutatingProductId={mutatingProductId}
+          />
+        </div>
       </div>
+
+      {showTour && (
+        <GuidedTour
+          steps={inventoryTourSteps}
+          onComplete={completeTour}
+          onSkip={skipTour}
+          allowNavigation={true}
+        />
+      )}
     </div>
   );
 };

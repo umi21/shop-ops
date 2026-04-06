@@ -31,6 +31,7 @@ const ExpensesHeader: React.FC<ExpensesHeaderProps> = ({
                     type="button"
                     onClick={onAdd}
                     className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-600"
+                    data-tour="add-expense-btn"
                 >
                     <Plus className="h-4 w-4" />
                     Add Expense

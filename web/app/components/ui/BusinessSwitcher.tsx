@@ -11,6 +11,8 @@ interface Business {
   timezone: string;
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
+
 export default function BusinessSwitcher() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [activeBusiness, setActiveBusiness] = useState<Business | null>(null);
@@ -38,7 +40,7 @@ export default function BusinessSwitcher() {
     const token = getToken();
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:8080/businesses", {
+      const res = await fetch(`${BASE_URL}/businesses`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -97,7 +99,7 @@ export default function BusinessSwitcher() {
      }
 
      try {
-       const res = await fetch("http://localhost:8080/businesses", {
+       const res = await fetch(`${BASE_URL}/businesses`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
