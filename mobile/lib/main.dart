@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/routes/app_routes.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_bloc.dart';
 import 'features/inventory/presentation/manager/bloc/inventory_event.dart';
 
 import 'package:mobile/injection_container.dart' as di;
 import 'package:mobile/shared/sync/sync_service.dart';
+
+Future<bool> hasSeenOnboarding() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('hasSeenOnboarding') ?? false;
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +21,8 @@ void main() async {
 
   final syncService = di.sl<SyncService>();
   syncService.startListening();
+
+  final seen = await hasSeenOnboarding();
 
   runApp(
     MultiBlocProvider(
@@ -29,13 +37,15 @@ void main() async {
           )..add(LoadInventoryEvent('default_business_id')),
         ),
       ],
-      child: const ShopOpsApp(),
+      child: ShopOpsApp(seen: seen),
     ),
   );
 }
 
 class ShopOpsApp extends StatelessWidget {
-  const ShopOpsApp({Key? key}) : super(key: key);
+  final bool seen;
+
+  const ShopOpsApp({Key? key, required this.seen}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +57,7 @@ class ShopOpsApp extends StatelessWidget {
         textTheme: GoogleFonts.manropeTextTheme(Theme.of(context).textTheme),
         scaffoldBackgroundColor: Colors.white,
       ),
-      initialRoute: AppRoutes.initialRoute,
+      initialRoute: seen ? AppRoutes.loginRoute : AppRoutes.onboardingRoute,
       routes: AppRoutes.getRoutes(),
     );
   }
