@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/core/routes/app_routes.dart';
+import 'package:mobile/injection_container.dart' as di;
+import 'package:mobile/core/usecases/usecase.dart';
+import 'package:mobile/features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'package:mobile/features/auth/domain/usecases/update_profile_usecase.dart';
+import 'package:mobile/features/auth/domain/usecases/logout_usecase.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,18 +16,118 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   static const primary = Color(0xFF1765FF);
 
-  final _nameController = TextEditingController(text: 'Shemsu Shop');
-  final _emailController = TextEditingController(text: 'owner@shemsusuq.com');
-  final _phoneController = TextEditingController(text: '+1 234 567 8901');
-  final _businessController = TextEditingController(text: 'Shemsu General Store');
-  final _locationController = TextEditingController(text: 'Addis Ababa, Ethiopia');
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _businessController = TextEditingController();
+  final _locationController = TextEditingController();
 
   bool _faceIdEnabled = true;
   bool _largeExpenseAlerts = false;
+  bool _isLoading = true;
+  String? _userId;
 
   bool _savePressed = false;
   bool _logoutPressed = false;
   bool _cameraPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final getCurrentUser = di.sl<GetCurrentUserUseCase>();
+    final result = await getCurrentUser(const NoParams());
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error loading profile: ${failure.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      (user) {
+        if (mounted) {
+          setState(() {
+            _userId = user.id;
+            _nameController.text = user.name;
+            _emailController.text = user.email;
+            _phoneController.text = user.phone;
+            _isLoading = false;
+          });
+        }
+      },
+    );
+  }
+
+  Future<void> _saveProfile() async {
+    if (_userId == null) return;
+
+    final updateProfile = di.sl<UpdateProfileUseCase>();
+    final result = await updateProfile(
+      UpdateProfileParams(
+        userId: _userId!,
+        name: _nameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+      ),
+    );
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving profile: ${failure.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (user) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _logout() async {
+    final logout = di.sl<LogoutUseCase>();
+    final result = await logout(const NoParams());
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error logging out: ${failure.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (_) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.loginRoute,
+          (route) => false,
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -35,6 +141,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
       appBar: AppBar(
@@ -46,7 +156,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         title: const Text(
           'Profile Settings',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black87),
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
         centerTitle: true,
       ),
@@ -69,12 +183,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: Colors.grey.shade200,
                         border: Border.all(color: Colors.white, width: 3),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
                         ],
                       ),
-                      child: const CircleAvatar(
-                        backgroundColor: Color(0xFFC6A77D),
-                        child: Icon(Icons.person, color: Colors.white, size: 40),
+                      child: CircleAvatar(
+                        backgroundColor: const Color(0xFFC6A77D),
+                        child: Text(
+                          _nameController.text.isNotEmpty
+                              ? _nameController.text[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 40,
+                          ),
+                        ),
                       ),
                     ),
                     Positioned(
@@ -83,7 +209,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: GestureDetector(
                         onTapDown: (_) => setState(() => _cameraPressed = true),
                         onTapUp: (_) => setState(() => _cameraPressed = false),
-                        onTapCancel: () => setState(() => _cameraPressed = false),
+                        onTapCancel: () =>
+                            setState(() => _cameraPressed = false),
                         child: AnimatedScale(
                           scale: _cameraPressed ? 0.88 : 1.0,
                           duration: const Duration(milliseconds: 100),
@@ -91,10 +218,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                              color: _cameraPressed ? const Color(0xFF0D4FCC) : primary,
+                              color: _cameraPressed
+                                  ? const Color(0xFF0D4FCC)
+                                  : primary,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 14,
+                            ),
                           ),
                         ),
                       ),
@@ -102,13 +235,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Shemsu Shop',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                Text(
+                  _nameController.text.isNotEmpty
+                      ? _nameController.text
+                      : 'User',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Owner, Shemsu General Store',
+                  _phoneController.text.isNotEmpty ? _phoneController.text : '',
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ],
@@ -123,9 +261,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               _EditableTile(label: 'FULL NAME', controller: _nameController),
               const _Divider(),
-              _EditableTile(label: 'EMAIL ADDRESS', controller: _emailController, keyboardType: TextInputType.emailAddress),
+              _EditableTile(
+                label: 'EMAIL ADDRESS',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
               const _Divider(),
-              _EditableTile(label: 'PHONE NUMBER', controller: _phoneController, keyboardType: TextInputType.phone),
+              _EditableTile(
+                label: 'PHONE NUMBER',
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+              ),
             ],
           ),
 
@@ -135,11 +281,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const _SectionTitle('BUSINESS DETAILS'),
           _SettingsCard(
             children: [
-              _EditableTile(label: 'BUSINESS NAME', controller: _businessController),
+              _EditableTile(
+                label: 'BUSINESS NAME',
+                controller: _businessController,
+              ),
               const _Divider(),
               _EditableTile(label: 'LOCATION', controller: _locationController),
               const _Divider(),
-              // Currency — tappable row with ink ripple
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -148,21 +296,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     bottomLeft: Radius.circular(14),
                     bottomRight: Radius.circular(14),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     child: Row(
                       children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('CURRENCY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primary, letterSpacing: 0.6)),
-                              const SizedBox(height: 4),
-                              const Text('USD — US Dollar', style: TextStyle(fontSize: 15)),
+                              Text(
+                                'CURRENCY',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: primary,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'USD — US Dollar',
+                                style: TextStyle(fontSize: 15),
+                              ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right, color: Colors.grey),
+                        Icon(Icons.chevron_right, color: Colors.grey),
                       ],
                     ),
                   ),
@@ -177,7 +336,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const _SectionTitle('SECURITY'),
           _SettingsCard(
             children: [
-              // Change Password — tappable row
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -190,7 +348,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     iconColor: const Color(0xFF5856D6),
                     icon: Icons.lock_outline,
                     title: 'Change Password',
-                    trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -235,7 +396,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Save Changes button with press animation
           GestureDetector(
             onTapDown: (_) => setState(() => _savePressed = true),
-            onTapUp: (_) => setState(() => _savePressed = false),
+            onTapUp: (_) {
+              setState(() => _savePressed = false);
+              _saveProfile();
+            },
             onTapCancel: () => setState(() => _savePressed = false),
             child: AnimatedScale(
               scale: _savePressed ? 0.97 : 1.0,
@@ -248,12 +412,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: _savePressed
                       ? []
-                      : [BoxShadow(color: primary.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))],
+                      : [
+                          BoxShadow(
+                            color: primary.withOpacity(0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                 ),
                 alignment: Alignment.center,
                 child: const Text(
                   'Save Changes',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -266,7 +440,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               GestureDetector(
                 onTapDown: (_) => setState(() => _logoutPressed = true),
-                onTapUp: (_) => setState(() => _logoutPressed = false),
+                onTapUp: (_) {
+                  setState(() => _logoutPressed = false);
+                  _showLogoutConfirmation();
+                },
                 onTapCancel: () => setState(() => _logoutPressed = false),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 80),
@@ -306,6 +483,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  void _showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _logout();
+            },
+            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // Footer link with underline on press
@@ -337,7 +537,9 @@ class _FooterLinkState extends State<_FooterLink> {
           style: TextStyle(
             color: _pressed ? Colors.grey[700] : Colors.grey[500],
             fontSize: 12,
-            decoration: _pressed ? TextDecoration.underline : TextDecoration.none,
+            decoration: _pressed
+                ? TextDecoration.underline
+                : TextDecoration.none,
           ),
         ),
       ),
@@ -365,7 +567,12 @@ class _EditableTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1765FF), letterSpacing: 0.6),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1765FF),
+              letterSpacing: 0.6,
+            ),
           ),
           const SizedBox(height: 4),
           TextField(
@@ -424,7 +631,10 @@ class _IconTile extends StatelessWidget {
           Container(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(color: iconColor, borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: iconColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(icon, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 14),
@@ -432,10 +642,19 @@ class _IconTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
-                  Text(subtitle!, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  Text(
+                    subtitle!,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  ),
                 ],
               ],
             ),
@@ -452,7 +671,12 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Divider(height: 1, indent: 62, endIndent: 0, color: Colors.grey.shade200);
+    return Divider(
+      height: 1,
+      indent: 62,
+      endIndent: 0,
+      color: Colors.grey.shade200,
+    );
   }
 }
 
@@ -466,7 +690,12 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8, left: 4),
       child: Text(
         title,
-        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.8),
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:mobile/features/auth/data/models/user_model.dart';
 
 abstract class AuthLocalDataSource {
   Future<UserModel?> getUser();
+  Future<UserModel?> getUserByPhone(String phone);
   Future<void> saveUser(UserModel user);
   Future<void> deleteUser();
   Future<bool> hasUser();
@@ -16,6 +17,11 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<UserModel?> getUser() async {
     return await isar.userModels.where().findFirst();
+  }
+
+  @override
+  Future<UserModel?> getUserByPhone(String phone) async {
+    return await isar.userModels.filter().phoneEqualTo(phone).findFirst();
   }
 
   @override

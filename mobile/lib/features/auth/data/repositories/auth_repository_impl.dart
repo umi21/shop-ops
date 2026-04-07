@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:mobile/core/error/exceptions.dart';
 import 'package:mobile/core/error/failures.dart';
+import 'package:mobile/core/utils/password_service.dart';
 import 'package:mobile/features/auth/data/datasources/auth_local_datasource.dart';
 import 'package:mobile/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:mobile/features/auth/data/models/mappers/user_mapper.dart';
@@ -25,21 +26,36 @@ class AuthRepositoryImpl implements AuthRepository {
       final localUser = await localDataSource.getUser();
 
       if (localUser != null && localUser.phone == phone) {
-        return Right(UserMapper.toEntity(localUser));
+        if (localUser.passwordHash != null &&
+            PasswordService.verifyPassword(password, localUser.passwordHash!)) {
+          return Right(UserMapper.toEntity(localUser));
+        } else if (localUser.passwordHash == null) {
+          return const Left(
+            ValidationFailure('Password not set for this user'),
+          );
+        } else {
+          return const Left(
+            ValidationFailure('Invalid phone number or password'),
+          );
+        }
       }
 
       try {
         final response = await remoteDataSource.login(phone, password);
         final userModel = UserMapper.fromJson(response['user']);
+        final hashedPassword = PasswordService.hashPassword(password);
+        userModel.passwordHash = hashedPassword;
         await localDataSource.saveUser(userModel);
         return Right(UserMapper.toEntity(userModel));
       } on NetworkException {
         if (localUser != null) {
-          return Right(UserMapper.toEntity(localUser));
+          return const Left(NetworkFailure('No internet connection'));
         }
         return const Left(
-          NetworkFailure('No internet connection and no cached user'),
+          NotFoundFailure('User not found. Please register first.'),
         );
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message, statusCode: e.statusCode));
       }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -55,6 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     final now = DateTime.now();
     final tempId = uuid.v4();
+    final passwordHash = PasswordService.hashPassword(password);
     final tempUser = User(
       id: tempId,
       email: email,
@@ -64,6 +81,7 @@ class AuthRepositoryImpl implements AuthRepository {
       updatedAt: now,
     );
     final userModel = UserMapper.toModel(tempUser, isSynced: false);
+    userModel.passwordHash = passwordHash;
     await localDataSource.saveUser(userModel);
 
     try {
@@ -75,6 +93,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       final syncedUserModel = UserMapper.fromJson(response['user']);
+      syncedUserModel.passwordHash = passwordHash;
       await localDataSource.saveUser(syncedUserModel);
       return Right(UserMapper.toEntity(syncedUserModel));
     } on NetworkException {
@@ -130,6 +149,7 @@ class AuthRepositoryImpl implements AuthRepository {
           email: email,
         );
         final syncedModel = UserMapper.fromJson(response['user']);
+        syncedModel.passwordHash = localUser.passwordHash;
         await localDataSource.saveUser(syncedModel);
         return Right(UserMapper.toEntity(syncedModel));
       } on NetworkException {
