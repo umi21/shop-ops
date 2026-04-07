@@ -27,13 +27,15 @@ class SubmitProductEvent extends AddProductEvent {
   final String name;
   final int stockQuantity;
   final double sellingPrice;
+  final String? imageUrl;
 
   SubmitProductEvent({
     required this.name,
     required this.stockQuantity,
     required this.sellingPrice,
+    this.imageUrl,
   });
 
   @override
-  List<Object?> get props => [name, stockQuantity, sellingPrice];
+  List<Object?> get props => [name, stockQuantity, sellingPrice, imageUrl];
 }

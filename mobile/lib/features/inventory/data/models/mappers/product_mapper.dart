@@ -7,7 +7,9 @@ class ProductMapper {
       id: model.id,
       businessId: model.businessId,
       name: model.name,
+      imageUrl: model.imageUrl,
       defaultSellingPrice: model.defaultSellingPrice,
+      costPrice: model.costPrice,
       stockQuantity: model.stockQuantity,
       lowStockThreshold: model.lowStockThreshold,
       createdAt: model.createdAt,
@@ -24,7 +26,9 @@ class ProductMapper {
       ..id = entity.id
       ..businessId = entity.businessId
       ..name = entity.name
+      ..imageUrl = entity.imageUrl
       ..defaultSellingPrice = entity.defaultSellingPrice
+      ..costPrice = entity.costPrice
       ..stockQuantity = entity.stockQuantity
       ..lowStockThreshold = entity.lowStockThreshold
       ..createdAt = entity.createdAt
@@ -38,7 +42,9 @@ class ProductMapper {
       'id': model.id,
       'businessId': model.businessId,
       'name': model.name,
+      'imageUrl': model.imageUrl,
       'defaultSellingPrice': model.defaultSellingPrice,
+      'costPrice': model.costPrice,
       'stockQuantity': model.stockQuantity,
       'lowStockThreshold': model.lowStockThreshold,
       'createdAt': model.createdAt.toIso8601String(),
@@ -51,7 +57,9 @@ class ProductMapper {
       ..id = json['id']
       ..businessId = json['businessId']
       ..name = json['name']
+      ..imageUrl = json['imageUrl']
       ..defaultSellingPrice = (json['defaultSellingPrice'] as num).toDouble()
+      ..costPrice = (json['costPrice'] as num?)?.toDouble() ?? 0.0
       ..stockQuantity = json['stockQuantity']
       ..lowStockThreshold = json['lowStockThreshold'] ?? 5
       ..createdAt = DateTime.parse(json['createdAt'])

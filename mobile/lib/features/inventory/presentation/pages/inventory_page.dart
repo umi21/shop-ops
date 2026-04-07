@@ -54,7 +54,10 @@ class _InventoryPageState extends State<InventoryPage> {
                       duration: const Duration(milliseconds: 100),
                       child: CircleAvatar(
                         backgroundColor: const Color(0xFFE2E8F0),
-                        child: const Icon(Icons.person, color: Color(0xFF475569)),
+                        child: const Icon(
+                          Icons.person,
+                          color: Color(0xFF475569),
+                        ),
                       ),
                     ),
                   ),
@@ -69,6 +72,11 @@ class _InventoryPageState extends State<InventoryPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextField(
+                  onChanged: (query) {
+                    context.read<InventoryBloc>().add(
+                      SearchProductsEvent(query),
+                    );
+                  },
                   decoration: InputDecoration(
                     hintText: 'Search products, SKUs...',
                     hintStyle: const TextStyle(color: Color(0xFF6B7280)),
@@ -143,9 +151,10 @@ class _InventoryPageState extends State<InventoryPage> {
                           Expanded(
                             child: ListView.builder(
                               physics: const BouncingScrollPhysics(),
-                              itemCount: state.products.length,
+                              itemCount: state.filteredProducts.length,
                               itemBuilder: (context, index) {
-                                final currentProduct = state.products[index];
+                                final currentProduct =
+                                    state.filteredProducts[index];
 
                                 return GestureDetector(
                                   onTap: () {

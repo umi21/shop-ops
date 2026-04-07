@@ -3,11 +3,204 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/features/inventory/domain/entities/product.dart';
 import 'package:mobile/features/inventory/presentation/manager/bloc/inventory_bloc.dart';
 import 'package:mobile/features/inventory/presentation/manager/bloc/inventory_event.dart';
+import 'package:mobile/injection_container.dart' as di;
+import 'package:mobile/features/inventory/domain/usecases/update_product_usecase.dart';
 
-class ProductDetailsPage extends StatelessWidget {
+class ProductDetailsPage extends StatefulWidget {
   final Product product;
 
   const ProductDetailsPage({Key? key, required this.product}) : super(key: key);
+
+  @override
+  State<ProductDetailsPage> createState() => _ProductDetailsPageState();
+}
+
+class _ProductDetailsPageState extends State<ProductDetailsPage> {
+  late Product _product;
+  final _restockController = TextEditingController();
+  bool _isEditing = false;
+
+  final _nameController = TextEditingController();
+  final _sellingPriceController = TextEditingController();
+  final _costPriceController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _product = widget.product;
+    _nameController.text = _product.name;
+    _sellingPriceController.text = _product.defaultSellingPrice.toString();
+    _costPriceController.text = _product.costPrice.toString();
+  }
+
+  @override
+  void dispose() {
+    _restockController.dispose();
+    _nameController.dispose();
+    _sellingPriceController.dispose();
+    _costPriceController.dispose();
+    super.dispose();
+  }
+
+  void _showRestockDialog() {
+    _restockController.text = '';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Restock Product'),
+        content: TextField(
+          controller: _restockController,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Quantity to add',
+            hintText: 'Enter number of units',
+            prefixIcon: Icon(Icons.add_circle_outline),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final quantity = int.tryParse(_restockController.text);
+              if (quantity != null && quantity > 0) {
+                context.read<InventoryBloc>().add(
+                  AdjustStockEvent(_product.id, quantity),
+                );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Added $quantity units to stock'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text('Add Stock'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDialog() {
+    _nameController.text = _product.name;
+    _sellingPriceController.text = _product.defaultSellingPrice.toString();
+    _costPriceController.text = _product.costPrice.toString();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Product'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Product Name',
+                  prefixIcon: Icon(Icons.inventory_2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _sellingPriceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Selling Price',
+                  prefixIcon: Icon(Icons.attach_money),
+                  prefixText: '\$ ',
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _costPriceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Cost Price',
+                  prefixIcon: Icon(Icons.money_off),
+                  prefixText: '\$ ',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = _nameController.text.trim();
+              final sellingPrice =
+                  double.tryParse(_sellingPriceController.text) ??
+                  _product.defaultSellingPrice;
+              final costPrice =
+                  double.tryParse(_costPriceController.text) ??
+                  _product.costPrice;
+
+              if (name.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Product name cannot be empty'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              final updatedProduct = _product.copyWith(
+                name: name,
+                defaultSellingPrice: sellingPrice,
+                costPrice: costPrice,
+                updatedAt: DateTime.now(),
+              );
+
+              final updateUseCase = di.sl<UpdateProductUseCase>();
+              final result = await updateUseCase(
+                UpdateProductParams(product: updatedProduct),
+              );
+
+              if (!context.mounted) return;
+
+              result.fold(
+                (failure) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${failure.message}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                },
+                (product) {
+                  setState(() {
+                    _product = product;
+                  });
+                  context.read<InventoryBloc>().add(
+                    UpdateProductEvent(product),
+                  );
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Product updated successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+              );
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,12 +209,12 @@ class ProductDetailsPage extends StatelessWidget {
     String statusText;
     Color statusDotColor;
 
-    if (product.isOutOfStock) {
+    if (_product.isOutOfStock) {
       statusBgColor = const Color(0xFFFFEBEB);
       statusTextColor = const Color(0xFFEF4444);
       statusDotColor = const Color(0xFFEF4444);
       statusText = 'OUT OF STOCK';
-    } else if (product.isLowStock) {
+    } else if (_product.isLowStock) {
       statusBgColor = const Color(0xFFFFF3E0);
       statusTextColor = const Color(0xFFF97316);
       statusDotColor = const Color(0xFFF97316);
@@ -57,12 +250,8 @@ class ProductDetailsPage extends StatelessWidget {
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.ios_share, color: Color(0xFF1E5EFE)),
-            onPressed: () {},
-          ),
-          IconButton(
             icon: const Icon(Icons.edit, color: Color(0xFF1E5EFE)),
-            onPressed: () {},
+            onPressed: _showEditDialog,
           ),
           const SizedBox(width: 8),
         ],
@@ -81,7 +270,7 @@ class ProductDetailsPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        product.name,
+                        _product.name,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
@@ -91,7 +280,7 @@ class ProductDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'ID: ${product.id}',
+                        'ID: ${_product.id.substring(0, 8)}...',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -110,11 +299,24 @@ class ProductDetailsPage extends StatelessWidget {
                     color: Colors.orange.shade100,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
-                    Icons.inventory_2,
-                    color: Colors.orange,
-                    size: 40,
-                  ),
+                  child: _product.imageUrl != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset(
+                            _product.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.inventory_2,
+                              color: Colors.orange,
+                              size: 40,
+                            ),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.inventory_2,
+                          color: Colors.orange,
+                          size: 40,
+                        ),
                 ),
               ],
             ),
@@ -134,7 +336,7 @@ class ProductDetailsPage extends StatelessWidget {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  '${product.stockQuantity}',
+                  '${_product.stockQuantity}',
                   style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w800,
@@ -182,7 +384,7 @@ class ProductDetailsPage extends StatelessWidget {
                 Expanded(
                   child: _buildSummaryCard(
                     'SELLING PRICE',
-                    '\$${product.defaultSellingPrice.toStringAsFixed(2)}',
+                    '\$${_product.defaultSellingPrice.toStringAsFixed(2)}',
                     '',
                     false,
                   ),
@@ -190,10 +392,32 @@ class ProductDetailsPage extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildSummaryCard(
-                    'LOW STOCK THRESHOLD',
-                    '${product.lowStockThreshold}',
+                    'COST PRICE',
+                    '\$${_product.costPrice.toStringAsFixed(2)}',
                     '',
                     false,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryCard(
+                    'LOW STOCK THRESHOLD',
+                    '${_product.lowStockThreshold}',
+                    '',
+                    false,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildSummaryCard(
+                    'PROFIT MARGIN',
+                    '\$${(_product.defaultSellingPrice - _product.costPrice).toStringAsFixed(2)}',
+                    '',
+                    (_product.defaultSellingPrice - _product.costPrice) >= 0,
                   ),
                 ),
               ],
@@ -225,13 +449,20 @@ class ProductDetailsPage extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                flex: 1,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    context.read<InventoryBloc>().add(
-                      AdjustStockEvent(product.id, -1),
-                    );
-                  },
+                  onPressed: _product.stockQuantity > 0
+                      ? () {
+                          context.read<InventoryBloc>().add(
+                            AdjustStockEvent(_product.id, -1),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Removed 1 unit from stock'),
+                              backgroundColor: Colors.orange,
+                            ),
+                          );
+                        }
+                      : null,
                   icon: const Icon(Icons.remove, color: Colors.white, size: 20),
                   label: const Text(
                     'REMOVE',
@@ -252,16 +483,14 @@ class ProductDetailsPage extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                flex: 1,
+                flex: 2,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    context.read<InventoryBloc>().add(
-                      AdjustStockEvent(product.id, 1),
-                    );
+                    _showRestockDialog();
                   },
                   icon: const Icon(Icons.add, color: Colors.white, size: 20),
                   label: const Text(
-                    'ADD STOCK',
+                    'RESTOCK',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -387,18 +616,15 @@ class ProductDetailsPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _buildBar(40, const Color(0xFFF1F5F9)),
-                _buildBar(60, const Color(0xFFF1F5F9)),
-                _buildBar(50, const Color(0xFFF1F5F9)),
-                _buildBar(80, const Color(0xFF93C5FD)),
-                _buildBar(120, const Color(0xFF1E5EFE)),
-                _buildBar(75, const Color(0xFF93C5FD)),
-                _buildBar(55, const Color(0xFFF1F5F9)),
-                _buildBar(90, const Color(0xFFF1F5F9)),
-                _buildBar(115, const Color(0xFF1E5EFE)),
-                _buildBar(65, const Color(0xFFBFDBFE)),
-              ],
+              children: List.generate(
+                10,
+                (index) => _buildBar(
+                  30 + (index * 10).toDouble(),
+                  index == 9
+                      ? const Color(0xFF1E5EFE)
+                      : const Color(0xFF93C5FD),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -467,18 +693,21 @@ class ProductDetailsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _buildLogisticsRow('Product ID', product.id),
+          _buildLogisticsRow('Product ID', _product.id.substring(0, 13)),
           const SizedBox(height: 16),
-          _buildLogisticsRow('Business ID', product.businessId),
+          _buildLogisticsRow(
+            'Business ID',
+            _product.businessId.substring(0, 13),
+          ),
           const SizedBox(height: 16),
           _buildLogisticsRow(
             'Low Stock Threshold',
-            '${product.lowStockThreshold} units',
+            '${_product.lowStockThreshold} units',
           ),
           const SizedBox(height: 16),
-          _buildLogisticsRow('Created', _formatDate(product.createdAt)),
+          _buildLogisticsRow('Created', _formatDate(_product.createdAt)),
           const SizedBox(height: 16),
-          _buildLogisticsRow('Last Updated', _formatDate(product.updatedAt)),
+          _buildLogisticsRow('Last Updated', _formatDate(_product.updatedAt)),
         ],
       ),
     );

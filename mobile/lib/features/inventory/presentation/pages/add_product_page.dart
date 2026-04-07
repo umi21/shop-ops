@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:mobile/injection_container.dart' as di;
 import '../manager/bloc/add_product/add_product_bloc.dart';
 import '../manager/bloc/add_product/add_product_event.dart' as add_product;
@@ -17,11 +19,24 @@ class AddProductPage extends StatefulWidget {
 
 class _AddProductPageState extends State<AddProductPage> {
   final _productNameController = TextEditingController();
+  final _stockController = TextEditingController(text: '0');
+  final ImagePicker _picker = ImagePicker();
+  XFile? _selectedImage;
 
   @override
   void dispose() {
     _productNameController.dispose();
+    _stockController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _selectedImage = image;
+      });
+    }
   }
 
   @override
@@ -82,43 +97,72 @@ class _AddProductPageState extends State<AddProductPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Product Image
                     Center(
-                      child: DottedBorder(
-                        color: const Color(0xFF135BEC),
-                        strokeWidth: 2,
-                        dashPattern: const [6, 4],
-                        borderType: BorderType.RRect,
-                        radius: const Radius.circular(16),
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_a_photo_outlined,
-                                color: Color(0xFF1E5EFE),
-                                size: 32,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                'ADD PHOTO',
-                                style: TextStyle(
-                                  color: Color(0xFF1E5EFE),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: _selectedImage != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.file(
+                                  File(_selectedImage!.path),
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : DottedBorder(
+                                color: const Color(0xFF135BEC),
+                                strokeWidth: 2,
+                                dashPattern: const [6, 4],
+                                borderType: BorderType.RRect,
+                                radius: const Radius.circular(16),
+                                child: Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_a_photo_outlined,
+                                        color: Color(0xFF1E5EFE),
+                                        size: 32,
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'ADD PHOTO',
+                                        style: TextStyle(
+                                          color: Color(0xFF1E5EFE),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_selectedImage != null)
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedImage = null;
+                            });
+                          },
+                          child: const Text(
+                            'Remove Photo',
+                            style: TextStyle(color: Colors.red),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
 
                     _buildLabel('Product Name'),
                     const SizedBox(height: 8),
@@ -146,56 +190,37 @@ class _AddProductPageState extends State<AddProductPage> {
                     _buildLabel('Initial Stock Level'),
                     const SizedBox(height: 8),
 
-                    BlocBuilder<AddProductBloc, AddProductState>(
-                      builder: (context, state) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                    // Direct number input for stock
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: _stockController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: '0',
+                          hintStyle: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade400,
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.remove_circle_outline,
-                                  color: Color(0xFF1E5EFE),
-                                ),
-                                onPressed: () =>
-                                    context.read<AddProductBloc>().add(
-                                      add_product.UpdateStockEvent(
-                                        state.stock - 1,
-                                      ),
-                                    ),
-                              ),
-                              Text(
-                                '${state.stock}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1E293B),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.add_circle_outline,
-                                  color: Color(0xFF1E5EFE),
-                                ),
-                                onPressed: () =>
-                                    context.read<AddProductBloc>().add(
-                                      add_product.UpdateStockEvent(
-                                        state.stock + 1,
-                                      ),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                        ),
+                        onChanged: (value) {
+                          final stock = int.tryParse(value) ?? 0;
+                          context.read<AddProductBloc>().add(
+                            add_product.UpdateStockEvent(stock),
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(height: 32),
 
@@ -336,6 +361,7 @@ class _AddProductPageState extends State<AddProductPage> {
                                         name: name,
                                         stockQuantity: state.stock,
                                         sellingPrice: state.sellingPrice,
+                                        imageUrl: _selectedImage?.path,
                                       ),
                                     );
                                   },

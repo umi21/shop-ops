@@ -4,7 +4,9 @@ class Product extends Equatable {
   final String id;
   final String businessId;
   final String name;
+  final String? imageUrl;
   final double defaultSellingPrice;
+  final double costPrice;
   final int stockQuantity;
   final int lowStockThreshold;
   final DateTime createdAt;
@@ -14,7 +16,9 @@ class Product extends Equatable {
     required this.id,
     required this.businessId,
     required this.name,
+    this.imageUrl,
     required this.defaultSellingPrice,
+    this.costPrice = 0.0,
     required this.stockQuantity,
     required this.lowStockThreshold,
     required this.createdAt,
@@ -28,7 +32,9 @@ class Product extends Equatable {
     String? id,
     String? businessId,
     String? name,
+    String? imageUrl,
     double? defaultSellingPrice,
+    double? costPrice,
     int? stockQuantity,
     int? lowStockThreshold,
     DateTime? createdAt,
@@ -38,7 +44,9 @@ class Product extends Equatable {
       id: id ?? this.id,
       businessId: businessId ?? this.businessId,
       name: name ?? this.name,
+      imageUrl: imageUrl ?? this.imageUrl,
       defaultSellingPrice: defaultSellingPrice ?? this.defaultSellingPrice,
+      costPrice: costPrice ?? this.costPrice,
       stockQuantity: stockQuantity ?? this.stockQuantity,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       createdAt: createdAt ?? this.createdAt,
@@ -51,7 +59,9 @@ class Product extends Equatable {
     id,
     businessId,
     name,
+    imageUrl,
     defaultSellingPrice,
+    costPrice,
     stockQuantity,
     lowStockThreshold,
     createdAt,
