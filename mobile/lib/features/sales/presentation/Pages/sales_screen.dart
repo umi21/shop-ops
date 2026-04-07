@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:mobile/features/inventory/domain/entities/product.dart';
 import 'package:mobile/injection_container.dart' as di;
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/expandable_fab.dart';
+import '../../../inventory/domain/usecases/get_products_usecase.dart';
 import '../../domain/entities/sale.dart';
 import '../manager/bloc/sales_bloc.dart';
 import '../manager/bloc/sales_event.dart';
@@ -275,7 +278,10 @@ class _SalesScreenState extends State<SalesScreen> {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) => const _QuickAddSaleSheet(),
+                  builder: (_) => BlocProvider.value(
+                    value: BlocProvider.of<SalesBloc>(context),
+                    child: const _QuickAddSaleSheet(),
+                  ),
                 ),
               ),
             ),
@@ -561,11 +567,13 @@ class _SaleTile extends StatelessWidget {
         ),
       ),
       title: Text(
-        sale.isVoided ? 'Voided Sale' : 'Product ${sale.productId}',
+        sale.isVoided
+            ? 'Voided Sale'
+            : 'Sale #${sale.productId.substring(0, 8)}',
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '${sale.quantity} units \u2022 ${_formatTime(sale.createdAt)}',
+        '${sale.quantity} units • ${_formatTime(sale.createdAt)}',
         style: TextStyle(fontSize: 12, color: Colors.grey[500]),
       ),
       trailing: Column(
@@ -606,20 +614,92 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
   static const green = Color(0xFF2ECC40);
   static const primary = Color(0xFF1765FF);
 
-  String _quantity = '2';
-  final double _unitPrice = 18.50;
+  String _quantity = '1';
+  double _unitPrice = 0.0;
   bool _paymentReceived = true;
   bool _addPressed = false;
+  bool _isLoadingProducts = true;
+  bool _showProductList = false;
 
   final _productSearchController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _quantityController = TextEditingController(text: '1');
+
+  List<Product> _products = [];
+  List<Product> _filteredProducts = [];
+  Product? _selectedProduct;
 
   @override
-  void dispose() {
-    _productSearchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final getProductsUseCase = di.sl<GetProductsUseCase>();
+      final result = await getProductsUseCase('default_business_id');
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              _isLoadingProducts = false;
+            });
+          }
+        },
+        (products) {
+          if (mounted) {
+            setState(() {
+              _products = products;
+              _filteredProducts = products;
+              _isLoadingProducts = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingProducts = false;
+        });
+      }
+    }
+  }
+
+  void _filterProducts(String query) {
+    setState(() {
+      _filteredProducts = _products
+          .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+      _showProductList = query.isNotEmpty;
+    });
+  }
+
+  void _selectProduct(Product product) {
+    setState(() {
+      _selectedProduct = product;
+      _unitPrice = product.defaultSellingPrice;
+      _priceController.text = _unitPrice.toStringAsFixed(2);
+      _productSearchController.text = product.name;
+      _showProductList = false;
+    });
   }
 
   double get _total => (double.tryParse(_quantity) ?? 0) * _unitPrice;
+
+  void _updateQuantity(String value) {
+    setState(() {
+      _quantity = value.isEmpty ? '0' : value;
+      _quantityController.text = _quantity;
+    });
+  }
+
+  void _updatePrice(String value) {
+    setState(() {
+      _unitPrice = double.tryParse(value) ?? 0.0;
+    });
+  }
 
   void _keyTap(String key) {
     setState(() {
@@ -632,7 +712,57 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
       } else {
         _quantity = _quantity == '0' ? key : _quantity + key;
       }
+      _quantityController.text = _quantity;
     });
+  }
+
+  void _submitSale() {
+    if (_selectedProduct == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a product'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final qty = int.tryParse(_quantity) ?? 0;
+    if (qty <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid quantity'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final sale = Sale.create(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      businessId: 'default_business_id',
+      productId: _selectedProduct!.id,
+      unitPrice: _unitPrice,
+      quantity: qty,
+    );
+
+    context.read<SalesBloc>().add(AddSaleEvent(sale));
+
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Sale added successfully!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _productSearchController.dispose();
+    _priceController.dispose();
+    _quantityController.dispose();
+    super.dispose();
   }
 
   @override
@@ -710,8 +840,16 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _productSearchController,
+                    onChanged: _filterProducts,
+                    onTap: () {
+                      if (_productSearchController.text.isNotEmpty) {
+                        setState(() {
+                          _showProductList = true;
+                        });
+                      }
+                    },
                     decoration: InputDecoration(
-                      hintText: 'Search product or SKU...',
+                      hintText: 'Search product by name...',
                       hintStyle: TextStyle(
                         color: Colors.grey[400],
                         fontSize: 14,
@@ -744,10 +882,75 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                       ),
                     ),
                   ),
+
+                  if (_showProductList && !_isLoadingProducts)
+                    Container(
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(13),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: _filteredProducts.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Text(
+                                'No products found',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: _filteredProducts.length,
+                              itemBuilder: (context, index) {
+                                final product = _filteredProducts[index];
+                                return ListTile(
+                                  leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.inventory_2,
+                                      color: Colors.orange,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  title: Text(product.name),
+                                  subtitle: Text(
+                                    'Stock: ${product.stockQuantity} • \$${product.defaultSellingPrice.toStringAsFixed(2)}',
+                                  ),
+                                  onTap: () => _selectProduct(product),
+                                );
+                              },
+                            ),
+                    ),
+
+                  if (_isLoadingProducts)
+                    const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      _Chip(label: 'In Stock: -- units', color: green),
+                      _Chip(
+                        label: _selectedProduct != null
+                            ? 'Stock: ${_selectedProduct!.stockQuantity} units'
+                            : 'Select a product',
+                        color: _selectedProduct != null ? green : Colors.grey,
+                      ),
                       const SizedBox(width: 8),
                       _Chip(
                         label: 'Price: \$${_unitPrice.toStringAsFixed(2)}',
@@ -786,12 +989,19 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: green, width: 2),
                           ),
-                          child: Text(
-                            _quantity,
+                          child: TextField(
+                            controller: _quantityController,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w700,
                             ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            onChanged: _updateQuantity,
                           ),
                         ),
                       ],
@@ -820,12 +1030,22 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Text(
-                            '\$${_unitPrice.toStringAsFixed(2)}',
+                          child: TextField(
+                            controller: _priceController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                             ),
+                            decoration: const InputDecoration(
+                              prefixText: '\$ ',
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            onChanged: _updatePrice,
                           ),
                         ),
                       ],
@@ -916,7 +1136,7 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                 onTapDown: (_) => setState(() => _addPressed = true),
                 onTapUp: (_) {
                   setState(() => _addPressed = false);
-                  Navigator.pop(context);
+                  _submitSale();
                 },
                 onTapCancel: () => setState(() => _addPressed = false),
                 child: AnimatedScale(
