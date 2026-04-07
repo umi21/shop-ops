@@ -22,6 +22,7 @@ import 'package:mobile/features/auth/domain/usecases/update_business_usecase.dar
 import 'package:mobile/features/auth/domain/usecases/get_business_usecase.dart';
 import 'package:mobile/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:mobile/features/auth/domain/usecases/create_business_usecase.dart';
+import 'package:mobile/features/auth/domain/usecases/is_logged_in_usecase.dart';
 
 import 'package:mobile/features/inventory/data/datasources/inventory_local_datasource.dart';
 import 'package:mobile/features/inventory/data/datasources/inventory_remote_datasource.dart';
@@ -102,6 +103,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetBusinessUseCase(sl()));
   sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
   sl.registerLazySingleton(() => CreateBusinessUseCase(sl()));
+  sl.registerLazySingleton(() => IsLoggedInUseCase(sl()));
 
   // Inventory
   sl.registerLazySingleton<InventoryLocalDataSource>(

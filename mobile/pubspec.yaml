@@ -36,6 +36,8 @@ dependencies:
   uuid: ^4.2.1
   intl: ^0.18.1
   connectivity_plus: ^5.0.2
+  crypto: ^3.0.3
+  image_picker: ^1.0.7
 
 
 dev_dependencies:
