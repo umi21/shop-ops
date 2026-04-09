@@ -46,7 +46,7 @@ class _SignupScreenState extends State<SignupScreen> {
       child: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthenticatedState) {
-            Navigator.pushReplacementNamed(context, AppRoutes.mainRoute);
+            Navigator.pushReplacementNamed(context, AppRoutes.loginRoute);
           } else if (state is AuthErrorState) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -123,7 +123,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        hintText: 'John Doe',
                         prefixIcon: const Icon(Icons.person_outline),
                         filled: true,
                         fillColor: Colors.grey.shade50,
@@ -151,7 +150,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        hintText: 'john@example.com',
                         prefixIcon: const Icon(Icons.email_outlined),
                         filled: true,
                         fillColor: Colors.grey.shade50,
@@ -326,17 +324,6 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.shield, size: 16, color: Colors.grey),
-                        SizedBox(width: 12),
-                        Icon(Icons.cloud_sync, size: 16, color: Colors.grey),
-                      ],
                     ),
 
                     const SizedBox(height: 18),

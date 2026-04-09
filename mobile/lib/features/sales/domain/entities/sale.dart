@@ -4,6 +4,7 @@ class Sale extends Equatable {
   final String id;
   final String businessId;
   final String productId;
+  final String? productName;
   final double unitPrice;
   final int quantity;
   final double total;
@@ -14,6 +15,7 @@ class Sale extends Equatable {
     required this.id,
     required this.businessId,
     required this.productId,
+    this.productName,
     required this.unitPrice,
     required this.quantity,
     required this.total,
@@ -25,6 +27,7 @@ class Sale extends Equatable {
     required String id,
     required String businessId,
     required String productId,
+    String? productName,
     required double unitPrice,
     required int quantity,
     DateTime? createdAt,
@@ -34,6 +37,7 @@ class Sale extends Equatable {
       id: id,
       businessId: businessId,
       productId: productId,
+      productName: productName,
       unitPrice: unitPrice,
       quantity: quantity,
       total: total,
@@ -45,6 +49,7 @@ class Sale extends Equatable {
     String? id,
     String? businessId,
     String? productId,
+    String? productName,
     double? unitPrice,
     int? quantity,
     double? total,
@@ -55,6 +60,7 @@ class Sale extends Equatable {
       id: id ?? this.id,
       businessId: businessId ?? this.businessId,
       productId: productId ?? this.productId,
+      productName: productName ?? this.productName,
       unitPrice: unitPrice ?? this.unitPrice,
       quantity: quantity ?? this.quantity,
       total: total ?? this.total,
@@ -68,6 +74,7 @@ class Sale extends Equatable {
     id,
     businessId,
     productId,
+    productName,
     unitPrice,
     quantity,
     total,

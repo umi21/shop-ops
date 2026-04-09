@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile/features/inventory/domain/entities/product.dart';
 
@@ -56,8 +57,8 @@ class ProductCard extends StatelessWidget {
               child: Container(
                 width: 60,
                 height: 60,
-                color: Colors.grey.shade200,
-                child: const Icon(Icons.image, color: Colors.grey),
+                color: Colors.orange.shade100,
+                child: _buildProductImage(),
               ),
             ),
             const SizedBox(width: 16),
@@ -120,5 +121,20 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildProductImage() {
+    if (product.imageUrl != null && product.imageUrl!.isNotEmpty) {
+      return Image.file(
+        File(product.imageUrl!),
+        fit: BoxFit.cover,
+        width: 60,
+        height: 60,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.inventory_2, color: Colors.orange, size: 30);
+        },
+      );
+    }
+    return const Icon(Icons.inventory_2, color: Colors.orange, size: 30);
   }
 }

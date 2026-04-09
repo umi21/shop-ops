@@ -7,6 +7,7 @@ class SaleMapper {
       id: model.id,
       businessId: model.businessId,
       productId: model.productId,
+      productName: model.productName,
       unitPrice: model.unitPrice,
       quantity: model.quantity,
       total: model.total,
@@ -24,6 +25,7 @@ class SaleMapper {
       ..id = entity.id
       ..businessId = entity.businessId
       ..productId = entity.productId
+      ..productName = entity.productName
       ..unitPrice = entity.unitPrice
       ..quantity = entity.quantity
       ..total = entity.total
@@ -38,6 +40,7 @@ class SaleMapper {
       'id': model.id,
       'businessId': model.businessId,
       'productId': model.productId,
+      'productName': model.productName,
       'unitPrice': model.unitPrice,
       'quantity': model.quantity,
       'total': model.total,
@@ -51,6 +54,7 @@ class SaleMapper {
       ..id = json['id']
       ..businessId = json['businessId']
       ..productId = json['productId']
+      ..productName = json['productName']
       ..unitPrice = (json['unitPrice'] as num).toDouble()
       ..quantity = json['quantity']
       ..total = (json['total'] as num).toDouble()

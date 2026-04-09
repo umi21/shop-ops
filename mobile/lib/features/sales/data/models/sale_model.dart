@@ -15,6 +15,7 @@ class SaleModel {
   @Index()
   late String productId;
 
+  String? productName;
   late double unitPrice;
   late int quantity;
   late double total;
