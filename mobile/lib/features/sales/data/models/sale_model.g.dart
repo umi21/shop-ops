@@ -47,23 +47,28 @@ const SaleModelSchema = CollectionSchema(
       name: r'productId',
       type: IsarType.string,
     ),
-    r'quantity': PropertySchema(
+    r'productName': PropertySchema(
       id: 6,
+      name: r'productName',
+      type: IsarType.string,
+    ),
+    r'quantity': PropertySchema(
+      id: 7,
       name: r'quantity',
       type: IsarType.long,
     ),
     r'syncedAt': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'syncedAt',
       type: IsarType.dateTime,
     ),
     r'total': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'total',
       type: IsarType.double,
     ),
     r'unitPrice': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'unitPrice',
       type: IsarType.double,
     )
@@ -144,6 +149,12 @@ int _saleModelEstimateSize(
   bytesCount += 3 + object.businessId.length * 3;
   bytesCount += 3 + object.id.length * 3;
   bytesCount += 3 + object.productId.length * 3;
+  {
+    final value = object.productName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -159,10 +170,11 @@ void _saleModelSerialize(
   writer.writeBool(offsets[3], object.isSynced);
   writer.writeBool(offsets[4], object.isVoided);
   writer.writeString(offsets[5], object.productId);
-  writer.writeLong(offsets[6], object.quantity);
-  writer.writeDateTime(offsets[7], object.syncedAt);
-  writer.writeDouble(offsets[8], object.total);
-  writer.writeDouble(offsets[9], object.unitPrice);
+  writer.writeString(offsets[6], object.productName);
+  writer.writeLong(offsets[7], object.quantity);
+  writer.writeDateTime(offsets[8], object.syncedAt);
+  writer.writeDouble(offsets[9], object.total);
+  writer.writeDouble(offsets[10], object.unitPrice);
 }
 
 SaleModel _saleModelDeserialize(
@@ -178,10 +190,11 @@ SaleModel _saleModelDeserialize(
   object.isSynced = reader.readBool(offsets[3]);
   object.isVoided = reader.readBool(offsets[4]);
   object.productId = reader.readString(offsets[5]);
-  object.quantity = reader.readLong(offsets[6]);
-  object.syncedAt = reader.readDateTime(offsets[7]);
-  object.total = reader.readDouble(offsets[8]);
-  object.unitPrice = reader.readDouble(offsets[9]);
+  object.productName = reader.readStringOrNull(offsets[6]);
+  object.quantity = reader.readLong(offsets[7]);
+  object.syncedAt = reader.readDateTime(offsets[8]);
+  object.total = reader.readDouble(offsets[9]);
+  object.unitPrice = reader.readDouble(offsets[10]);
   return object;
 }
 
@@ -205,12 +218,14 @@ P _saleModelDeserializeProp<P>(
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 7:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 8:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 9:
+      return (reader.readDouble(offset)) as P;
+    case 10:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1119,6 +1134,158 @@ extension SaleModelQueryFilter
     });
   }
 
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition>
+      productNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'productName',
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition>
+      productNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'productName',
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition> productNameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'productName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition>
+      productNameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'productName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition> productNameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'productName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition> productNameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'productName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition>
+      productNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'productName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition> productNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'productName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition> productNameContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'productName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition> productNameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'productName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition>
+      productNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'productName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition>
+      productNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'productName',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<SaleModel, SaleModel, QAfterFilterCondition> quantityEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
@@ -1430,6 +1597,18 @@ extension SaleModelQuerySortBy on QueryBuilder<SaleModel, SaleModel, QSortBy> {
     });
   }
 
+  QueryBuilder<SaleModel, SaleModel, QAfterSortBy> sortByProductName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'productName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterSortBy> sortByProductNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'productName', Sort.desc);
+    });
+  }
+
   QueryBuilder<SaleModel, SaleModel, QAfterSortBy> sortByQuantity() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'quantity', Sort.asc);
@@ -1565,6 +1744,18 @@ extension SaleModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<SaleModel, SaleModel, QAfterSortBy> thenByProductName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'productName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SaleModel, SaleModel, QAfterSortBy> thenByProductNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'productName', Sort.desc);
+    });
+  }
+
   QueryBuilder<SaleModel, SaleModel, QAfterSortBy> thenByQuantity() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'quantity', Sort.asc);
@@ -1655,6 +1846,13 @@ extension SaleModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SaleModel, SaleModel, QDistinct> distinctByProductName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'productName', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SaleModel, SaleModel, QDistinct> distinctByQuantity() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'quantity');
@@ -1721,6 +1919,12 @@ extension SaleModelQueryProperty
   QueryBuilder<SaleModel, String, QQueryOperations> productIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'productId');
+    });
+  }
+
+  QueryBuilder<SaleModel, String?, QQueryOperations> productNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'productName');
     });
   }
 

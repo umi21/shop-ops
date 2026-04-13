@@ -166,7 +166,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       activity.add(
         ActivityItem(
           type: ActivityType.sale,
-          title: 'Sale: ${sale.productId}',
+          title: 'Sale: ${sale.productName}',
           subtitle: 'Today',
           amount: sale.total,
           timestamp: sale.createdAt,

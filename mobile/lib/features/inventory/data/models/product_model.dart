@@ -15,7 +15,7 @@ class ProductModel {
   late String name;
   String? imageUrl;
   late double defaultSellingPrice;
-  late double costPrice;
+  double costPrice = 0.0;
   late int stockQuantity;
   late int lowStockThreshold;
   late DateTime createdAt;
