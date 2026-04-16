@@ -5,28 +5,27 @@ const steps = [
   {
     number: "01",
     title: "Log the sale at the counter",
-    description: "Capture each transaction quickly so the day starts with real numbers, not guesswork.",
+    description:
+      "Capture each transaction quickly so the day starts with real numbers, not guesswork.",
   },
   {
     number: "02",
     title: "Stock updates behind the scenes",
-    description: "Inventory moves with the sale, helping the back room stay ahead of low-stock items.",
+    description:
+      "Inventory moves with the sale, helping the back room stay ahead of low-stock items.",
   },
   {
     number: "03",
     title: "Review expenses before closing",
-    description: "End the day with a clear view of costs, margin, and what needs attention tomorrow.",
+    description:
+      "End the day with a clear view of costs, margin, and what needs attention tomorrow.",
   },
 ];
 
 const signals = [
   { label: "Sales", value: "42 orders", tone: "text-[#135bec]" },
   { label: "Inventory", value: "18 items low", tone: "text-[#0f7b5f]" },
-<<<<<<< HEAD
   { label: "Expenses", value: "7 entries", tone: "text-[#135bec]" },
-=======
-  { label: "Expenses", value: "7 entries", tone: "text-[#8b5cf6]" },
->>>>>>> 0c54db3dae1711397d6836c938fcd7b89619999b
 ];
 
 export default function Workflow() {
@@ -53,7 +52,9 @@ export default function Workflow() {
               Built around the way a shop actually runs
             </h2>
             <p className="text-[16px] lg:text-[18px] leading-[1.7] text-[#4b5563] max-w-[680px]">
-              ShopOps keeps the counter, store room, and back office in sync so the owner, cashier, and stock keeper all work from the same playbook.
+              ShopOps keeps the counter, store room, and back office in sync so
+              the owner, cashier, and stock keeper all work from the same
+              playbook.
             </p>
           </div>
 
@@ -69,8 +70,12 @@ export default function Workflow() {
                       {step.number}
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-[18px] lg:text-[20px] font-medium text-[#111827]">{step.title}</h3>
-                      <p className="text-[15px] lg:text-[16px] leading-[1.65] text-[#5b6575] max-w-[520px]">{step.description}</p>
+                      <h3 className="text-[18px] lg:text-[20px] font-medium text-[#111827]">
+                        {step.title}
+                      </h3>
+                      <p className="text-[15px] lg:text-[16px] leading-[1.65] text-[#5b6575] max-w-[520px]">
+                        {step.description}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -81,8 +86,12 @@ export default function Workflow() {
               <div className="rounded-[26px] border border-[#dbe7ff] bg-[#0f172a] p-6 text-white shadow-[0px_18px_40px_rgba(15,23,42,0.18)]">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[12px] uppercase tracking-[0.18em] text-white/55">Today at a glance</p>
-                    <h3 className="mt-2 text-[24px] font-normal leading-tight">A live view of the shop, not a spreadsheet from last week</h3>
+                    <p className="text-[12px] uppercase tracking-[0.18em] text-white/55">
+                      Today at a glance
+                    </p>
+                    <h3 className="mt-2 text-[24px] font-normal leading-tight">
+                      A live view of the shop, not a spreadsheet from last week
+                    </h3>
                   </div>
                   <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[12px] font-medium text-white/80">
                     Synced now
@@ -91,9 +100,18 @@ export default function Workflow() {
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                   {signals.map((signal) => (
-                    <div key={signal.label} className="rounded-[18px] border border-white/10 bg-white/5 p-4">
-                      <p className="text-[12px] uppercase tracking-[0.14em] text-white/55">{signal.label}</p>
-                      <p className={`mt-3 text-[20px] font-medium ${signal.tone}`}>{signal.value}</p>
+                    <div
+                      key={signal.label}
+                      className="rounded-[18px] border border-white/10 bg-white/5 p-4"
+                    >
+                      <p className="text-[12px] uppercase tracking-[0.14em] text-white/55">
+                        {signal.label}
+                      </p>
+                      <p
+                        className={`mt-3 text-[20px] font-medium ${signal.tone}`}
+                      >
+                        {signal.value}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -102,8 +120,12 @@ export default function Workflow() {
               <div className="rounded-[26px] border border-[#dbe7ff] bg-white p-6 shadow-[0px_12px_30px_rgba(15,23,42,0.05)]">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[12px] uppercase tracking-[0.18em] text-[#6b7280]">Alerts</p>
-                    <h3 className="mt-2 text-[20px] font-medium text-[#111827]">Catch restock issues before they become lost sales</h3>
+                    <p className="text-[12px] uppercase tracking-[0.18em] text-[#6b7280]">
+                      Alerts
+                    </p>
+                    <h3 className="mt-2 text-[20px] font-medium text-[#111827]">
+                      Catch restock issues before they become lost sales
+                    </h3>
                   </div>
                   <div className="flex size-12 items-center justify-center rounded-full bg-[#e2f2ff] text-[#135bec]">
                     <span className="text-[18px] font-semibold">!</span>
@@ -112,7 +134,8 @@ export default function Workflow() {
 
                 <div className="mt-5 rounded-[18px] border border-[#cfe0ff] bg-[#f7fbff] p-4">
                   <p className="text-[14px] leading-[1.6] text-[#4b5563]">
-                    When stock runs low or expenses spike, the owner sees it in the same place the team works from every day.
+                    When stock runs low or expenses spike, the owner sees it in
+                    the same place the team works from every day.
                   </p>
                 </div>
 
