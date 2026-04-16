@@ -22,7 +22,11 @@ const steps = [
 const signals = [
   { label: "Sales", value: "42 orders", tone: "text-[#135bec]" },
   { label: "Inventory", value: "18 items low", tone: "text-[#0f7b5f]" },
+<<<<<<< HEAD
   { label: "Expenses", value: "7 entries", tone: "text-[#135bec]" },
+=======
+  { label: "Expenses", value: "7 entries", tone: "text-[#8b5cf6]" },
+>>>>>>> 0c54db3dae1711397d6836c938fcd7b89619999b
 ];
 
 export default function Workflow() {

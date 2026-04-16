@@ -1,9 +1,12 @@
 package routers
 
 import (
+	"os"
+	"strings"
+	"time"
+
 	"shop-ops/Delivery/controllers"
 	infrastructure "shop-ops/Infrastructure"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -29,15 +32,22 @@ func SetupRouter(
 	r.Use(infrastructure.RequestLogger(logger))
 	r.Use(gin.Recovery())
 
-	// CORS - allow all origins so any frontend can call this API
-	r.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
+	allowedOrigins := parseAllowedOrigins(os.Getenv("CORS_ALLOWED_ORIGINS"))
+	corsConfig := cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"}, // Updated AllowHeaders
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Disposition"},
 		AllowCredentials: false,
-		MaxAge:           12 * time.Hour, // Added MaxAge
-	}))
+		MaxAge:           12 * time.Hour,
+	}
+
+	if len(allowedOrigins) == 0 {
+		corsConfig.AllowAllOrigins = true
+	} else {
+		corsConfig.AllowOrigins = allowedOrigins
+	}
+
+	r.Use(cors.New(corsConfig))
 
 	// Health check (public, sans version)
 	r.GET("/ping", func(c *gin.Context) {
@@ -173,4 +183,31 @@ func SetupRouter(
 	}
 
 	return r
+}
+
+func parseAllowedOrigins(raw string) []string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return []string{
+			"http://localhost:3000",
+			"http://localhost:3001",
+			"http://localhost:8080",
+			"https://shop-ops-brown.vercel.app",
+		}
+	}
+
+	if raw == "*" {
+		return nil
+	}
+
+	parts := strings.Split(raw, ",")
+	allowed := make([]string, 0, len(parts))
+	for _, part := range parts {
+		origin := strings.TrimSpace(part)
+		if origin != "" {
+			allowed = append(allowed, origin)
+		}
+	}
+
+	return allowed
 }
