@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/core/value_objects/date_range.dart';
+import 'package:mobile/features/inventory/domain/usecases/adjust_stock_usecase.dart';
 import 'package:mobile/features/sales/domain/entities/sale.dart';
 import 'package:mobile/features/sales/domain/usecases/add_sale_usecase.dart';
 import 'package:mobile/features/sales/domain/usecases/get_sales_usecase.dart';
@@ -12,6 +13,7 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
   final GetSalesUseCase getSalesUseCase;
   final AddSaleUseCase addSaleUseCase;
   final VoidSaleUseCase voidSaleUseCase;
+  final AdjustStockUseCase adjustStockUseCase;
 
   List<Sale> _allSales = [];
 
@@ -19,6 +21,7 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
     required this.getSalesUseCase,
     required this.addSaleUseCase,
     required this.voidSaleUseCase,
+    required this.adjustStockUseCase,
   }) : super(SalesInitialState()) {
     on<LoadSalesEvent>(_onLoadSales);
     on<ChangeSalesPeriodEvent>(_onChangePeriod);
@@ -98,107 +101,157 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
   }
 
   void _onChangePeriod(ChangeSalesPeriodEvent event, Emitter<SalesState> emit) {
-    if (state is SalesLoadedState) {
-      final currentState = state as SalesLoadedState;
-      final dateRange = _getDateRangeForPeriod(event.period);
-      final filtered = _filterSalesByDate(_allSales, dateRange);
-      final grouped = _groupSalesByDate(filtered);
-      final total = filtered.fold(0.0, (sum, s) => sum + s.total);
-      final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
+    final currentState = state;
+    final period = event.period;
+    final dateRange = _getDateRangeForPeriod(period);
 
-      emit(
-        currentState.copyWith(
-          selectedPeriod: event.period,
-          dateRange: dateRange,
-          filteredSales: filtered,
-          groupedSales: grouped,
-          totalRevenue: total,
-          transactionCount: filtered.length,
-          averageSale: avg,
-        ),
-      );
+    List<Sale> filtered;
+    if (currentState is SalesLoadedState) {
+      filtered = _filterSalesByDate(_allSales, dateRange);
+    } else {
+      filtered = _filterSalesByDate(_allSales, dateRange);
     }
+
+    final grouped = _groupSalesByDate(filtered);
+    final total = filtered.fold(0.0, (sum, s) => sum + s.total);
+    final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
+
+    emit(
+      SalesLoadedState(
+        allSales: _allSales,
+        filteredSales: filtered,
+        groupedSales: grouped,
+        selectedPeriod: period,
+        dateRange: dateRange,
+        totalRevenue: total,
+        transactionCount: filtered.length,
+        averageSale: avg,
+      ),
+    );
   }
 
   Future<void> _onAddSale(AddSaleEvent event, Emitter<SalesState> emit) async {
-    if (state is SalesLoadedState) {
-      final currentState = state as SalesLoadedState;
+    await adjustStockUseCase(
+      AdjustStockParams(
+        productId: event.sale.productId,
+        quantityChange: -event.sale.quantity,
+      ),
+    );
 
-      final result = await addSaleUseCase(AddSaleParams(sale: event.sale));
+    final result = await addSaleUseCase(AddSaleParams(sale: event.sale));
 
-      result.fold(
-        (failure) => emit(currentState.copyWith(errorMessage: failure.message)),
-        (sale) {
-          _allSales = [..._allSales, sale];
-          final filtered = _filterSalesByDate(
-            _allSales,
-            currentState.dateRange,
-          );
-          final grouped = _groupSalesByDate(filtered);
-          final total = filtered.fold(0.0, (sum, s) => sum + s.total);
-          final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
+    result.fold(
+      (failure) {
+        final currentState = state;
+        if (currentState is SalesLoadedState) {
+          emit(currentState.copyWith(errorMessage: failure.message));
+        }
+      },
+      (sale) {
+        _allSales = [..._allSales, sale];
 
-          emit(
-            currentState.copyWith(
-              allSales: _allSales,
-              filteredSales: filtered,
-              groupedSales: grouped,
-              totalRevenue: total,
-              transactionCount: filtered.length,
-              averageSale: avg,
-            ),
-          );
-        },
-      );
-    }
+        DateRange dateRange;
+        String period;
+
+        final currentState = state;
+        if (currentState is SalesLoadedState) {
+          dateRange = currentState.dateRange;
+          period = currentState.selectedPeriod;
+        } else {
+          dateRange = _getDateRangeForPeriod('Daily');
+          period = 'Daily';
+        }
+
+        final filtered = _filterSalesByDate(_allSales, dateRange);
+        final grouped = _groupSalesByDate(filtered);
+        final total = filtered.fold(0.0, (sum, s) => sum + s.total);
+        final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
+
+        emit(
+          SalesLoadedState(
+            allSales: _allSales,
+            filteredSales: filtered,
+            groupedSales: grouped,
+            selectedPeriod: period,
+            dateRange: dateRange,
+            totalRevenue: total,
+            transactionCount: filtered.length,
+            averageSale: avg,
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _onVoidSale(
     VoidSaleEvent event,
     Emitter<SalesState> emit,
   ) async {
-    if (state is SalesLoadedState) {
-      final currentState = state as SalesLoadedState;
+    final saleToVoid = _allSales.firstWhere(
+      (s) => s.id == event.saleId,
+      orElse: () => throw Exception('Sale not found'),
+    );
 
-      final result = await voidSaleUseCase(event.saleId);
+    await adjustStockUseCase(
+      AdjustStockParams(
+        productId: saleToVoid.productId,
+        quantityChange: saleToVoid.quantity,
+      ),
+    );
 
-      result.fold(
-        (failure) => emit(currentState.copyWith(errorMessage: failure.message)),
-        (_) {
-          _allSales = _allSales.map((s) {
-            if (s.id == event.saleId) {
-              return s.copyWith(isVoided: true);
-            }
-            return s;
-          }).toList();
+    final result = await voidSaleUseCase(event.saleId);
 
-          final filtered = _filterSalesByDate(
-            _allSales,
-            currentState.dateRange,
-          );
-          final grouped = _groupSalesByDate(filtered);
-          final total = filtered.fold(0.0, (sum, s) => sum + s.total);
-          final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
+    result.fold(
+      (failure) {
+        final currentState = state;
+        if (currentState is SalesLoadedState) {
+          emit(currentState.copyWith(errorMessage: failure.message));
+        }
+      },
+      (_) {
+        _allSales = _allSales.map((s) {
+          if (s.id == event.saleId) {
+            return s.copyWith(isVoided: true);
+          }
+          return s;
+        }).toList();
 
-          emit(
-            currentState.copyWith(
-              allSales: _allSales,
-              filteredSales: filtered,
-              groupedSales: grouped,
-              totalRevenue: total,
-              transactionCount: filtered.length,
-              averageSale: avg,
-            ),
-          );
-        },
-      );
-    }
+        DateRange dateRange;
+        String period;
+
+        final currentState = state;
+        if (currentState is SalesLoadedState) {
+          dateRange = currentState.dateRange;
+          period = currentState.selectedPeriod;
+        } else {
+          dateRange = _getDateRangeForPeriod('Daily');
+          period = 'Daily';
+        }
+
+        final filtered = _filterSalesByDate(_allSales, dateRange);
+        final grouped = _groupSalesByDate(filtered);
+        final total = filtered.fold(0.0, (sum, s) => sum + s.total);
+        final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
+
+        emit(
+          SalesLoadedState(
+            allSales: _allSales,
+            filteredSales: filtered,
+            groupedSales: grouped,
+            selectedPeriod: period,
+            dateRange: dateRange,
+            totalRevenue: total,
+            transactionCount: filtered.length,
+            averageSale: avg,
+          ),
+        );
+      },
+    );
   }
 
   void _onSearchSales(SearchSalesEvent event, Emitter<SalesState> emit) {
-    if (state is SalesLoadedState) {
-      final currentState = state as SalesLoadedState;
-
+    final currentState = state;
+    if (currentState is SalesLoadedState) {
       List<Sale> filtered;
       if (event.query.isEmpty) {
         filtered = _filterSalesByDate(_allSales, currentState.dateRange);
@@ -223,27 +276,40 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
   }
 
   void _onFilterByDate(FilterSalesByDateEvent event, Emitter<SalesState> emit) {
-    if (state is SalesLoadedState) {
-      final currentState = state as SalesLoadedState;
-      final filtered = _filterSalesByDate(_allSales, event.dateRange);
-      final grouped = _groupSalesByDate(filtered);
-      final total = filtered.fold(0.0, (sum, s) => sum + s.total);
-      final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
+    final currentState = state;
+    final filtered = _filterSalesByDate(_allSales, event.dateRange);
+    final grouped = _groupSalesByDate(filtered);
+    final total = filtered.fold(0.0, (sum, s) => sum + s.total);
+    final avg = filtered.isEmpty ? 0.0 : total / filtered.length;
 
-      String period = 'Daily';
-      final days = event.dateRange.to.difference(event.dateRange.from).inDays;
-      if (days > 7) {
-        period = 'Monthly';
-      } else if (days > 1) {
-        period = 'Weekly';
-      }
+    String period = 'Daily';
+    final days = event.dateRange.to.difference(event.dateRange.from).inDays;
+    if (days > 7) {
+      period = 'Monthly';
+    } else if (days > 1) {
+      period = 'Weekly';
+    }
 
+    if (currentState is SalesLoadedState) {
       emit(
         currentState.copyWith(
           selectedPeriod: period,
           dateRange: event.dateRange,
           filteredSales: filtered,
           groupedSales: grouped,
+          totalRevenue: total,
+          transactionCount: filtered.length,
+          averageSale: avg,
+        ),
+      );
+    } else {
+      emit(
+        SalesLoadedState(
+          allSales: _allSales,
+          filteredSales: filtered,
+          groupedSales: grouped,
+          selectedPeriod: period,
+          dateRange: event.dateRange,
           totalRevenue: total,
           transactionCount: filtered.length,
           averageSale: avg,

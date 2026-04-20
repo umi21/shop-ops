@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:mobile/core/error/exceptions.dart';
 import 'package:mobile/core/error/failures.dart';
 import 'package:mobile/core/utils/password_service.dart';
 import 'package:mobile/features/auth/data/datasources/auth_local_datasource.dart';
@@ -40,23 +39,25 @@ class AuthRepositoryImpl implements AuthRepository {
         }
       }
 
-      try {
-        final response = await remoteDataSource.login(phone, password);
-        final userModel = UserMapper.fromJson(response['user']);
-        final hashedPassword = PasswordService.hashPassword(password);
-        userModel.passwordHash = hashedPassword;
-        await localDataSource.saveUser(userModel);
-        return Right(UserMapper.toEntity(userModel));
-      } on NetworkException {
-        if (localUser != null) {
-          return const Left(NetworkFailure('No internet connection'));
-        }
-        return const Left(
-          NotFoundFailure('User not found. Please register first.'),
-        );
-      } on ServerException catch (e) {
-        return Left(ServerFailure(e.message, statusCode: e.statusCode));
-      }
+      return Left(CacheFailure("No such user exits."));
+
+      // try {
+      //   final response = await remoteDataSource.login(phone, password);
+      //   final userModel = UserMapper.fromJson(response['user']);
+      //   final hashedPassword = PasswordService.hashPassword(password);
+      //   userModel.passwordHash = hashedPassword;
+      //   await localDataSource.saveUser(userModel);
+      //   return Right(UserMapper.toEntity(userModel));
+      // } on NetworkException {
+      //   if (localUser != null) {
+      //     return const Left(NetworkFailure('No internet connection'));
+      //   }
+      //   return const Left(
+      //     NotFoundFailure('User not found. Please register first.'),
+      //   );
+      // } on ServerException catch (e) {
+      //   return Left(ServerFailure(e.message, statusCode: e.statusCode));
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -83,26 +84,26 @@ class AuthRepositoryImpl implements AuthRepository {
     final userModel = UserMapper.toModel(tempUser, isSynced: false);
     userModel.passwordHash = passwordHash;
     await localDataSource.saveUser(userModel);
+    return Right(UserMapper.toEntity(userModel));
+    // try {
+    //   final response = await remoteDataSource.register(
+    //     email: email,
+    //     password: password,
+    //     name: name,
+    //     phone: phone,
+    //   );
 
-    try {
-      final response = await remoteDataSource.register(
-        email: email,
-        password: password,
-        name: name,
-        phone: phone,
-      );
-
-      final syncedUserModel = UserMapper.fromJson(response['user']);
-      syncedUserModel.passwordHash = passwordHash;
-      await localDataSource.saveUser(syncedUserModel);
-      return Right(UserMapper.toEntity(syncedUserModel));
-    } on NetworkException {
-      return Right(tempUser);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message, statusCode: e.statusCode));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
+    //   final syncedUserModel = UserMapper.fromJson(response['user']);
+    //   syncedUserModel.passwordHash = passwordHash;
+    //   await localDataSource.saveUser(syncedUserModel);
+    //   return Right(UserMapper.toEntity(syncedUserModel));
+    // } on NetworkException {
+    //   return Right(tempUser);
+    // } on ServerException catch (e) {
+    //   return Left(ServerFailure(e.message, statusCode: e.statusCode));
+    // } catch (e) {
+    //   return Left(ServerFailure(e.toString()));
+    // }
   }
 
   @override
@@ -110,7 +111,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final currentUser = await localDataSource.getUser();
       if (currentUser != null) {
-        await localDataSource.deleteUser();
+        // await localDataSource.deleteUser();
         return Right(UserMapper.toEntity(currentUser));
       }
       return const Left(CacheFailure('No user to logout'));
@@ -140,21 +141,21 @@ class AuthRepositoryImpl implements AuthRepository {
         ..isSynced = false;
 
       await localDataSource.saveUser(updatedUser);
-
-      try {
-        final response = await remoteDataSource.updateProfile(
-          userId: userId,
-          name: name,
-          phone: phone,
-          email: email,
-        );
-        final syncedModel = UserMapper.fromJson(response['user']);
-        syncedModel.passwordHash = localUser.passwordHash;
-        await localDataSource.saveUser(syncedModel);
-        return Right(UserMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(UserMapper.toEntity(updatedUser));
-      }
+      return Right(UserMapper.toEntity(updatedUser));
+      // try {
+      //   final response = await remoteDataSource.updateProfile(
+      //     userId: userId,
+      //     name: name,
+      //     phone: phone,
+      //     email: email,
+      //   );
+      //   final syncedModel = UserMapper.fromJson(response['user']);
+      //   syncedModel.passwordHash = localUser.passwordHash;
+      //   await localDataSource.saveUser(syncedModel);
+      //   return Right(UserMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(UserMapper.toEntity(updatedUser));
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

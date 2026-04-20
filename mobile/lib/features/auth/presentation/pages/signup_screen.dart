@@ -82,7 +82,7 @@ class _SignupScreenState extends State<SignupScreen> {
       child: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthenticatedState) {
-            Navigator.pushReplacementNamed(context, AppRoutes.mainRoute);
+            Navigator.pushReplacementNamed(context, AppRoutes.loginRoute);
           } else if (state is AuthErrorState) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

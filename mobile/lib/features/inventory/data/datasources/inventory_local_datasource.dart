@@ -21,7 +21,6 @@ class InventoryLocalDataSourceImpl implements InventoryLocalDataSource {
     return await isar.productModels
         .filter()
         .businessIdEqualTo(businessId)
-        .sortByNameDesc()
         .findAll();
   }
 

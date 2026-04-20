@@ -38,6 +38,7 @@ class _SalesScreenState extends State<SalesScreen> {
         getSalesUseCase: di.sl(),
         addSaleUseCase: di.sl(),
         voidSaleUseCase: di.sl(),
+        adjustStockUseCase: di.sl(),
       )..add(LoadSalesEvent('default_business_id')),
       child: Builder(
         builder: (context) {
@@ -569,7 +570,7 @@ class _SaleTile extends StatelessWidget {
       title: Text(
         sale.isVoided
             ? 'Voided Sale'
-            : 'Sale #${sale.productId.substring(0, 8)}',
+            : sale.productName ?? 'Sale #${sale.productId.substring(0, 8)}',
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
@@ -636,12 +637,17 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
   }
 
   Future<void> _loadProducts() async {
+    setState(() {
+      _isLoadingProducts = true;
+    });
+
     try {
       final getProductsUseCase = di.sl<GetProductsUseCase>();
       final result = await getProductsUseCase('default_business_id');
 
       result.fold(
         (failure) {
+          debugPrint('Error loading products: ${failure.message}');
           if (mounted) {
             setState(() {
               _isLoadingProducts = false;
@@ -649,6 +655,12 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
           }
         },
         (products) {
+          debugPrint('Loaded ${products.length} products');
+          for (var p in products) {
+            debugPrint(
+              'Product: ${p.name}, businessId: ${p.businessId}, stock: ${p.stockQuantity}',
+            );
+          }
           if (mounted) {
             setState(() {
               _products = products;
@@ -659,6 +671,7 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
         },
       );
     } catch (e) {
+      debugPrint('Exception loading products: $e');
       if (mounted) {
         setState(() {
           _isLoadingProducts = false;
@@ -742,6 +755,7 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       businessId: 'default_business_id',
       productId: _selectedProduct!.id,
+      productName: _selectedProduct!.name,
       unitPrice: _unitPrice,
       quantity: qty,
     );
@@ -749,6 +763,7 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
     context.read<SalesBloc>().add(AddSaleEvent(sale));
 
     Navigator.pop(context);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Sale added successfully!'),
@@ -842,11 +857,9 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                     controller: _productSearchController,
                     onChanged: _filterProducts,
                     onTap: () {
-                      if (_productSearchController.text.isNotEmpty) {
-                        setState(() {
-                          _showProductList = true;
-                        });
-                      }
+                      setState(() {
+                        _showProductList = true;
+                      });
                     },
                     decoration: InputDecoration(
                       hintText: 'Search product by name...',
@@ -941,6 +954,73 @@ class _QuickAddSaleSheetState extends State<_QuickAddSaleSheet> {
                       padding: EdgeInsets.all(16),
                       child: Center(child: CircularProgressIndicator()),
                     ),
+
+                  if (_selectedProduct != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: green.withAlpha(26),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: green.withAlpha(64)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: green.withAlpha(51),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.check_circle,
+                              color: green,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Selected Product',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _selectedProduct!.name,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedProduct = null;
+                                _productSearchController.clear();
+                                _unitPrice = 0.0;
+                                _priceController.clear();
+                              });
+                            },
+                            child: const Text(
+                              'Change',
+                              style: TextStyle(color: primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 8),
                   Row(

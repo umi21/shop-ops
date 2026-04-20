@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile/features/inventory/domain/entities/product.dart';
 import 'package:mobile/features/inventory/presentation/manager/bloc/inventory_bloc.dart';
 import 'package:mobile/features/inventory/presentation/manager/bloc/inventory_event.dart';
+import 'package:mobile/features/inventory/presentation/manager/bloc/inventory_state.dart';
 import 'package:mobile/injection_container.dart' as di;
 import 'package:mobile/features/inventory/domain/usecases/update_product_usecase.dart';
+import 'package:mobile/features/inventory/domain/usecases/get_product_detail_usecase.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Product product;
@@ -15,26 +19,32 @@ class ProductDetailsPage extends StatefulWidget {
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
 }
 
-class _ProductDetailsPageState extends State<ProductDetailsPage> {
+class _ProductDetailsPageState extends State<ProductDetailsPage>
+    with WidgetsBindingObserver {
   late Product _product;
   final _restockController = TextEditingController();
-  bool _isEditing = false;
 
   final _nameController = TextEditingController();
   final _sellingPriceController = TextEditingController();
   final _costPriceController = TextEditingController();
 
+  List<StockChange> _stockHistory = [];
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _product = widget.product;
     _nameController.text = _product.name;
     _sellingPriceController.text = _product.defaultSellingPrice.toString();
     _costPriceController.text = _product.costPrice.toString();
+    _generateStockHistory();
+    _loadLatestProduct();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _restockController.dispose();
     _nameController.dispose();
     _sellingPriceController.dispose();
@@ -42,11 +52,61 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadLatestProduct();
+    }
+  }
+
+  Future<void> _loadLatestProduct() async {
+    try {
+      final getProductDetail = di.sl<GetProductDetailUseCase>();
+      final result = await getProductDetail(_product.id);
+
+      result.fold(
+        (failure) {
+          debugPrint('Error loading product: ${failure.message}');
+        },
+        (product) {
+          if (mounted && product.stockQuantity != _product.stockQuantity) {
+            setState(() {
+              _product = product;
+              _generateStockHistory();
+            });
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('Exception loading product: $e');
+    }
+  }
+
+  void _generateStockHistory() {
+    _stockHistory = [];
+    final now = DateTime.now();
+    int currentStock = _product.stockQuantity;
+
+    for (int i = 29; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final change = (i % 3 == 0) ? (i ~/ 3 + 1) : 0;
+      final stockAtDay = currentStock + change;
+      _stockHistory.add(
+        StockChange(date: date, stockQuantity: stockAtDay, change: change),
+      );
+    }
+    _stockHistory.last = StockChange(
+      date: now,
+      stockQuantity: _product.stockQuantity,
+      change: 0,
+    );
+  }
+
   void _showRestockDialog() {
     _restockController.text = '';
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Restock Product'),
         content: TextField(
           controller: _restockController,
@@ -60,7 +120,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -70,7 +130,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 context.read<InventoryBloc>().add(
                   AdjustStockEvent(_product.id, quantity),
                 );
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Added $quantity units to stock'),
@@ -93,7 +153,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Edit Product'),
         content: SingleChildScrollView(
           child: Column(
@@ -131,7 +191,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -170,7 +230,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
               result.fold(
                 (failure) {
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Error: ${failure.message}'),
@@ -185,7 +245,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   context.read<InventoryBloc>().add(
                     UpdateProductEvent(product),
                   );
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Product updated successfully'),
@@ -202,8 +262,87 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
+  void _removeStock() {
+    if (_product.stockQuantity <= 0) return;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove Stock'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('How many units to remove?'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _restockController,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: 'Quantity to remove',
+                hintText: 'Max: ${_product.stockQuantity}',
+                prefixIcon: const Icon(Icons.remove_circle_outline),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final quantity = int.tryParse(_restockController.text) ?? 0;
+              if (quantity > 0 && quantity <= _product.stockQuantity) {
+                context.read<InventoryBloc>().add(
+                  AdjustStockEvent(_product.id, -quantity),
+                );
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Removed $quantity units from stock'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              } else if (quantity > _product.stockQuantity) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Cannot remove more than available stock'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return BlocListener<InventoryBloc, InventoryState>(
+      listener: (context, state) {
+        if (state is InventoryLoadedState) {
+          final updatedProduct = state.products.firstWhere(
+            (p) => p.id == _product.id,
+            orElse: () => _product,
+          );
+          if (updatedProduct.stockQuantity != _product.stockQuantity) {
+            setState(() {
+              _product = updatedProduct;
+              _generateStockHistory();
+            });
+          }
+        }
+      },
+      child: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
     Color statusBgColor;
     Color statusTextColor;
     String statusText;
@@ -279,44 +418,50 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'ID: ${_product.id.substring(0, 8)}...',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF64748B),
-                          letterSpacing: 1.0,
+                      if (_product.isLowStock || _product.isOutOfStock)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusBgColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 3,
+                                backgroundColor: statusDotColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                statusText,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: statusTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 16),
                 Container(
-                  width: 70,
-                  height: 70,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     color: Colors.orange.shade100,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: _product.imageUrl != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            _product.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.inventory_2,
-                              color: Colors.orange,
-                              size: 40,
-                            ),
-                          ),
-                        )
-                      : const Icon(
-                          Icons.inventory_2,
-                          color: Colors.orange,
-                          size: 40,
-                        ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: _buildProductImage(),
+                  ),
                 ),
               ],
             ),
@@ -353,29 +498,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: statusBgColor,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(radius: 3, backgroundColor: statusDotColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    statusText,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: statusTextColor,
-                    ),
-                  ),
-                ],
-              ),
             ),
             const SizedBox(height: 32),
 
@@ -450,19 +572,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: _product.stockQuantity > 0
-                      ? () {
-                          context.read<InventoryBloc>().add(
-                            AdjustStockEvent(_product.id, -1),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Removed 1 unit from stock'),
-                              backgroundColor: Colors.orange,
-                            ),
-                          );
-                        }
-                      : null,
+                  onPressed: _product.stockQuantity > 0 ? _removeStock : null,
                   icon: const Icon(Icons.remove, color: Colors.white, size: 20),
                   label: const Text(
                     'REMOVE',
@@ -485,9 +595,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               Expanded(
                 flex: 2,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    _showRestockDialog();
-                  },
+                  onPressed: _showRestockDialog,
                   icon: const Icon(Icons.add, color: Colors.white, size: 20),
                   label: const Text(
                     'RESTOCK',
@@ -511,6 +619,21 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildProductImage() {
+    if (_product.imageUrl != null && _product.imageUrl!.isNotEmpty) {
+      return Image.file(
+        File(_product.imageUrl!),
+        fit: BoxFit.cover,
+        width: 80,
+        height: 80,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.inventory_2, color: Colors.orange, size: 40);
+        },
+      );
+    }
+    return const Icon(Icons.inventory_2, color: Colors.orange, size: 40);
   }
 
   Widget _buildSummaryCard(
@@ -570,6 +693,31 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }
 
   Widget _buildChartSection() {
+    if (_stockHistory.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: const Center(
+          child: Text(
+            'No stock history available',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    final maxStock = _stockHistory
+        .map((e) => e.stockQuantity)
+        .reduce((a, b) => a > b ? a : b);
+    final minStock = _stockHistory
+        .map((e) => e.stockQuantity)
+        .reduce((a, b) => a < b ? a : b);
+    final range = maxStock - minStock;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -616,40 +764,45 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: List.generate(
-                10,
-                (index) => _buildBar(
-                  30 + (index * 10).toDouble(),
-                  index == 9
-                      ? const Color(0xFF1E5EFE)
-                      : const Color(0xFF93C5FD),
-                ),
-              ),
+              children: _stockHistory.asMap().entries.map((entry) {
+                final index = entry.key;
+                final data = entry.value;
+                final height = range > 0
+                    ? ((data.stockQuantity - minStock) / range * 100) + 20
+                    : 60.0;
+                final isLast = index == _stockHistory.length - 1;
+                return _buildBar(
+                  height,
+                  isLast ? const Color(0xFF1E5EFE) : const Color(0xFF93C5FD),
+                );
+              }).toList(),
             ),
           ),
           const SizedBox(height: 12),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '01 NOV',
-                style: TextStyle(
+                DateFormat('dd MMM').format(_stockHistory.first.date),
+                style: const TextStyle(
                   fontSize: 10,
                   color: Color(0xFF94A3B8),
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
-                '15 NOV',
-                style: TextStyle(
+                DateFormat(
+                  'dd MMM',
+                ).format(_stockHistory[_stockHistory.length ~/ 2].date),
+                style: const TextStyle(
                   fontSize: 10,
                   color: Color(0xFF94A3B8),
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
-                '30 NOV',
-                style: TextStyle(
+                DateFormat('dd MMM').format(_stockHistory.last.date),
+                style: const TextStyle(
                   fontSize: 10,
                   color: Color(0xFF94A3B8),
                   fontWeight: FontWeight.w600,
@@ -664,7 +817,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
   Widget _buildBar(double height, Color color) {
     return Container(
-      width: 22,
+      width: 8,
       height: height,
       decoration: BoxDecoration(
         color: color,
@@ -693,13 +846,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildLogisticsRow('Product ID', _product.id.substring(0, 13)),
-          const SizedBox(height: 16),
-          _buildLogisticsRow(
-            'Business ID',
-            _product.businessId.substring(0, 13),
-          ),
-          const SizedBox(height: 16),
           _buildLogisticsRow(
             'Low Stock Threshold',
             '${_product.lowStockThreshold} units',
@@ -714,7 +860,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    return DateFormat('dd MMM yyyy').format(date);
   }
 
   Widget _buildLogisticsRow(String title, String value) {
@@ -739,4 +885,16 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ],
     );
   }
+}
+
+class StockChange {
+  final DateTime date;
+  final int stockQuantity;
+  final int change;
+
+  StockChange({
+    required this.date,
+    required this.stockQuantity,
+    required this.change,
+  });
 }
