@@ -36,16 +36,17 @@ class SalesRepositoryImpl implements SalesRepository {
     try {
       final model = SaleMapper.toModel(sale, isSynced: false);
       await salesLocalDataSource.saveSale(model);
+      return Right(SaleMapper.toEntity(model));
 
-      try {
-        final saleData = SaleMapper.toJson(model);
-        final response = await salesRemoteDataSource.createSale(saleData);
-        final syncedModel = SaleMapper.fromJson(response);
-        await salesLocalDataSource.saveSale(syncedModel);
-        return Right(SaleMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(sale);
-      }
+      // try {
+      //   final saleData = SaleMapper.toJson(model);
+      //   final response = await salesRemoteDataSource.createSale(saleData);
+      //   final syncedModel = SaleMapper.fromJson(response);
+      //   await salesLocalDataSource.saveSale(syncedModel);
+      //   return Right(SaleMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(sale);
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -56,16 +57,17 @@ class SalesRepositoryImpl implements SalesRepository {
     try {
       final model = SaleMapper.toModel(sale, isSynced: false);
       await salesLocalDataSource.saveSale(model);
+      return Right(SaleMapper.toEntity(model));
 
-      try {
-        final saleData = SaleMapper.toJson(model);
-        final response = await salesRemoteDataSource.updateSale(saleData);
-        final syncedModel = SaleMapper.fromJson(response);
-        await salesLocalDataSource.saveSale(syncedModel);
-        return Right(SaleMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(sale);
-      }
+      // try {
+      //   final saleData = SaleMapper.toJson(model);
+      //   final response = await salesRemoteDataSource.updateSale(saleData);
+      //   final syncedModel = SaleMapper.fromJson(response);
+      //   await salesLocalDataSource.saveSale(syncedModel);
+      //   return Right(SaleMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(sale);
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -76,11 +78,11 @@ class SalesRepositoryImpl implements SalesRepository {
     try {
       await salesLocalDataSource.deleteSale(saleId);
 
-      try {
-        await salesRemoteDataSource.deleteSale(saleId);
-      } on NetworkException {
-        // Already deleted locally
-      }
+      // try {
+      //   await salesRemoteDataSource.deleteSale(saleId);
+      // } on NetworkException {
+      //   // Already deleted locally
+      // }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -101,14 +103,14 @@ class SalesRepositoryImpl implements SalesRepository {
 
       await salesLocalDataSource.saveSale(voidedSale);
 
-      try {
-        final saleData = SaleMapper.toJson(voidedSale);
-        final response = await salesRemoteDataSource.updateSale(saleData);
-        final syncedModel = SaleMapper.fromJson(response);
-        await salesLocalDataSource.saveSale(syncedModel);
-      } on NetworkException {
-        // Already voided locally
-      }
+      // try {
+      //   final saleData = SaleMapper.toJson(voidedSale);
+      //   final response = await salesRemoteDataSource.updateSale(saleData);
+      //   final syncedModel = SaleMapper.fromJson(response);
+      //   await salesLocalDataSource.saveSale(syncedModel);
+      // } on NetworkException {
+      //   // Already voided locally
+      // }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

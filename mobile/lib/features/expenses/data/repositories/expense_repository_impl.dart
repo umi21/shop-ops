@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:mobile/core/error/exceptions.dart';
 import 'package:mobile/core/error/failures.dart';
 import 'package:mobile/core/value_objects/date_range.dart';
 import 'package:mobile/features/expenses/data/datasources/expense_local_datasource.dart';
@@ -32,16 +31,17 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     try {
       final model = ExpenseMapper.toModel(expense, isSynced: false);
       await localDataSource.saveExpense(model);
+      return Right(ExpenseMapper.toEntity(model));
 
-      try {
-        final expenseData = ExpenseMapper.toJson(model);
-        final response = await remoteDataSource.createExpense(expenseData);
-        final syncedModel = ExpenseMapper.fromJson(response);
-        await localDataSource.saveExpense(syncedModel);
-        return Right(ExpenseMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(expense);
-      }
+      // try {
+      //   final expenseData = ExpenseMapper.toJson(model);
+      //   final response = await remoteDataSource.createExpense(expenseData);
+      //   final syncedModel = ExpenseMapper.fromJson(response);
+      //   await localDataSource.saveExpense(syncedModel);
+      //   return Right(ExpenseMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(expense);
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -52,16 +52,17 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     try {
       final model = ExpenseMapper.toModel(expense, isSynced: false);
       await localDataSource.saveExpense(model);
+      return Right(ExpenseMapper.toEntity(model));
 
-      try {
-        final expenseData = ExpenseMapper.toJson(model);
-        final response = await remoteDataSource.updateExpense(expenseData);
-        final syncedModel = ExpenseMapper.fromJson(response);
-        await localDataSource.saveExpense(syncedModel);
-        return Right(ExpenseMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(expense);
-      }
+      // try {
+      //   final expenseData = ExpenseMapper.toJson(model);
+      //   final response = await remoteDataSource.updateExpense(expenseData);
+      //   final syncedModel = ExpenseMapper.fromJson(response);
+      //   await localDataSource.saveExpense(syncedModel);
+      //   return Right(ExpenseMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(expense);
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -72,11 +73,11 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     try {
       await localDataSource.deleteExpense(expenseId);
 
-      try {
-        await remoteDataSource.deleteExpense(expenseId);
-      } on NetworkException {
-        // Already deleted locally
-      }
+      // try {
+      //   await remoteDataSource.deleteExpense(expenseId);
+      // } on NetworkException {
+      //   // Already deleted locally
+      // }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

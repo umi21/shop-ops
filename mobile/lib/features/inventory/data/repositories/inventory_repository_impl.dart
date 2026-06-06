@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:mobile/core/error/exceptions.dart';
 import 'package:mobile/core/error/failures.dart';
 import 'package:mobile/features/inventory/data/datasources/inventory_local_datasource.dart';
 import 'package:mobile/features/inventory/data/datasources/inventory_remote_datasource.dart';
@@ -44,16 +43,17 @@ class InventoryRepositoryImpl implements InventoryRepository {
     try {
       final model = ProductMapper.toModel(product, isSynced: false);
       await localDataSource.saveProduct(model);
+      return Right(ProductMapper.toEntity(model));
 
-      try {
-        final productData = ProductMapper.toJson(model);
-        final response = await remoteDataSource.createProduct(productData);
-        final syncedModel = ProductMapper.fromJson(response);
-        await localDataSource.saveProduct(syncedModel);
-        return Right(ProductMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(product);
-      }
+      // try {
+      //   final productData = ProductMapper.toJson(model);
+      //   final response = await remoteDataSource.createProduct(productData);
+      //   final syncedModel = ProductMapper.fromJson(response);
+      //   await localDataSource.saveProduct(syncedModel);
+      //   return Right(ProductMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(product);
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -65,16 +65,17 @@ class InventoryRepositoryImpl implements InventoryRepository {
       final updatedProduct = product.copyWith(updatedAt: DateTime.now());
       final model = ProductMapper.toModel(updatedProduct, isSynced: false);
       await localDataSource.saveProduct(model);
+      return Right(ProductMapper.toEntity(model));
 
-      try {
-        final productData = ProductMapper.toJson(model);
-        final response = await remoteDataSource.updateProduct(productData);
-        final syncedModel = ProductMapper.fromJson(response);
-        await localDataSource.saveProduct(syncedModel);
-        return Right(ProductMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(updatedProduct);
-      }
+      // try {
+      //   final productData = ProductMapper.toJson(model);
+      //   final response = await remoteDataSource.updateProduct(productData);
+      //   final syncedModel = ProductMapper.fromJson(response);
+      //   await localDataSource.saveProduct(syncedModel);
+      //   return Right(ProductMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(updatedProduct);
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -85,11 +86,11 @@ class InventoryRepositoryImpl implements InventoryRepository {
     try {
       await localDataSource.deleteProduct(productId);
 
-      try {
-        await remoteDataSource.deleteProduct(productId);
-      } on NetworkException {
-        // Product deleted locally, will sync later
-      }
+      // try {
+      //   await remoteDataSource.deleteProduct(productId);
+      // } on NetworkException {
+      //   // Product deleted locally, will sync later
+      // }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -142,16 +143,17 @@ class InventoryRepositoryImpl implements InventoryRepository {
         ..isSynced = false;
 
       await localDataSource.saveProduct(updatedProduct);
+      return Right(ProductMapper.toEntity(updatedProduct));
 
-      try {
-        final productData = ProductMapper.toJson(updatedProduct);
-        final response = await remoteDataSource.updateProduct(productData);
-        final syncedModel = ProductMapper.fromJson(response);
-        await localDataSource.saveProduct(syncedModel);
-        return Right(ProductMapper.toEntity(syncedModel));
-      } on NetworkException {
-        return Right(ProductMapper.toEntity(updatedProduct));
-      }
+      // try {
+      //   final productData = ProductMapper.toJson(updatedProduct);
+      //   final response = await remoteDataSource.updateProduct(productData);
+      //   final syncedModel = ProductMapper.fromJson(response);
+      //   await localDataSource.saveProduct(syncedModel);
+      //   return Right(ProductMapper.toEntity(syncedModel));
+      // } on NetworkException {
+      //   return Right(ProductMapper.toEntity(updatedProduct));
+      // }
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
