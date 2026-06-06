@@ -1,0 +1,140 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:mobile/features/inventory/domain/entities/product.dart';
+
+class ProductCard extends StatelessWidget {
+  final Product product;
+  final VoidCallback? onTap;
+
+  const ProductCard({Key? key, required this.product, this.onTap})
+    : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Color statusBgColor;
+    Color statusTextColor;
+    String statusText;
+    Color qtyColor;
+
+    if (product.isOutOfStock) {
+      statusBgColor = const Color(0xFFFFEBEB);
+      statusTextColor = const Color(0xFFEF4444);
+      statusText = 'OUT OF STOCK';
+      qtyColor = const Color(0xFFEF4444);
+    } else if (product.isLowStock) {
+      statusBgColor = const Color(0xFFFFF3E0);
+      statusTextColor = const Color(0xFFF97316);
+      statusText = 'LOW STOCK';
+      qtyColor = const Color(0xFFF97316);
+    } else {
+      statusBgColor = const Color(0xFFF1F5F9);
+      statusTextColor = const Color(0xFF64748B);
+      statusText = 'IN STOCK';
+      qtyColor = const Color(0xFF1E293B);
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade100),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 60,
+                height: 60,
+                color: Colors.orange.shade100,
+                child: _buildProductImage(),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '\$${product.defaultSellingPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${product.stockQuantity}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                    color: qtyColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusBgColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: statusTextColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductImage() {
+    if (product.imageUrl != null && product.imageUrl!.isNotEmpty) {
+      return Image.file(
+        File(product.imageUrl!),
+        fit: BoxFit.cover,
+        width: 60,
+        height: 60,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.inventory_2, color: Colors.orange, size: 30);
+        },
+      );
+    }
+    return const Icon(Icons.inventory_2, color: Colors.orange, size: 30);
+  }
+}
